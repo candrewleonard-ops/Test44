@@ -97,8 +97,9 @@ const Rounds = (() => {
                w(30, 40, "gold", 0.25)],
   ];
 
-  // gold & boss hedgehogs toughen up late game
+  // gold & boss hedgehogs toughen up late game; bosses run 15% lighter
   function hpScale(round, typeId) {
+    if (typeId === "boss" || typeId === "final") return 0.85;
     if (typeId === "gold" && round > 40) return 1 + 0.05 * (round - 40);
     return 1;
   }

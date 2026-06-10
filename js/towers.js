@@ -6,6 +6,9 @@
 
 const Towers = (() => {
 
+  // global balance: every tower attacks 15% faster
+  const SPEED_BUFF = 1.15;
+
   const TYPES = {
     clucko: {
       id: "clucko", name: "CLUCKO", art: "clucko",
@@ -173,6 +176,7 @@ const Towers = (() => {
           this.def.paths[p].ups[t].fx(s);
         }
       }
+      s.cooldown /= SPEED_BUFF;
       this.stats = s;
     }
 
