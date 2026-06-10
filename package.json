@@ -1,0 +1,12 @@
+{
+  "name": "pingas-tower-defense",
+  "version": "1.0.0",
+  "description": "Retro 2D tower defense: Dr. Pingas and the Badnik Brigade vs. the hedgehog horde.",
+  "private": true,
+  "scripts": {
+    "test": "node dev/smoke.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.1"
+  }
+}
