@@ -10,10 +10,10 @@ const Enemies = (() => {
     blue:   { tier: "blue",   hp: 1,  speed: 60,  xp: 1,  scale: 2,   radius: 13, children: [] },
     green:  { tier: "green",  hp: 1,  speed: 84,  xp: 2,  scale: 2,   radius: 13, children: ["blue"] },
     red:    { tier: "red",    hp: 1,  speed: 108, xp: 3,  scale: 2,   radius: 13, children: ["green"] },
-    yellow: { tier: "yellow", hp: 1,  speed: 186, xp: 4,  scale: 2,   radius: 13, children: ["red"] },
-    pink:   { tier: "pink",   hp: 1,  speed: 216, xp: 5,  scale: 2,   radius: 13, children: ["yellow"] },
+    yellow: { tier: "yellow", hp: 1,  speed: 168, xp: 4,  scale: 2,   radius: 13, children: ["red"] },
+    pink:   { tier: "pink",   hp: 1,  speed: 192, xp: 5,  scale: 2,   radius: 13, children: ["yellow"] },
     metal:  { tier: "metal",  hp: 3,  speed: 54,  xp: 8,  scale: 2,   radius: 13, children: ["red", "red"], sharpImmune: true },
-    shadow: { tier: "shadow", hp: 1,  speed: 138, xp: 8,  scale: 1.6, radius: 11, children: ["pink", "pink"] },
+    shadow: { tier: "shadow", hp: 1,  speed: 122, xp: 8,  scale: 1.6, radius: 11, children: ["pink", "pink"] },
     gold:   { tier: "gold",   hp: 14, speed: 96,  xp: 25, scale: 2.4, radius: 16, children: ["shadow", "shadow"] },
     // bosses: hp passed at spawn time; always gold, bigger, more health
     boss:   { tier: "gold",   hp: 1200, speed: 42, xp: 250, scale: 3.4, radius: 26, children: ["gold", "gold", "gold", "gold"], boss: true },

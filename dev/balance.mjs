@@ -31,17 +31,19 @@ await page.check("#chk-auto");
 await page.evaluate(() => {
   window.AI = {
     plan: [
+      // open with cheap coverage of the first stretches, slows early
       ["clucko", 250, 255, 0], ["drillbert", 480, 370, 0],
-      ["clucko", 330, 180, 1], ["slick", 540, 505, 0],
-      ["drillbert", 660, 200, 1], ["bomzo", 410, 480, 0],
-      ["clucko", 560, 180, 0], ["buzzbot", 530, 370, 0],
-      ["slick", 745, 350, 1], ["bomzo", 560, 470, 1],
-      ["buzzbot", 470, 250, 0], ["yolker", 80, 250, 0],
-      ["yolker", 940, 200, 0], ["buzzbot", 300, 370, 1],
-      ["yolker", 100, 540, 0], ["yolker", 940, 120, 0],
-      ["yolker", 200, 60, 0], ["yolker", 500, 600, 0],
-      ["yolker", 880, 60, 0], ["yolker", 770, 170, 0],
-      ["yolker", 200, 600, 0], ["yolker", 540, 60, 0],
+      ["slick", 210, 180, 0], ["clucko", 330, 180, 1],
+      ["drillbert", 660, 200, 1], ["slick", 430, 250, 1],
+      ["bomzo", 410, 480, 0], ["clucko", 560, 180, 0],
+      ["buzzbot", 530, 370, 0], ["slick", 745, 350, 1],
+      ["bomzo", 560, 470, 1], ["buzzbot", 470, 250, 0],
+      ["yolker", 80, 250, 0], ["yolker", 940, 200, 0],
+      ["buzzbot", 300, 370, 1], ["yolker", 100, 540, 0],
+      ["yolker", 940, 120, 0], ["yolker", 200, 60, 0],
+      ["yolker", 500, 600, 0], ["yolker", 880, 60, 0],
+      ["yolker", 770, 170, 0], ["yolker", 200, 600, 0],
+      ["yolker", 540, 60, 0],
     ],
     bought: 0,
     tick() {
