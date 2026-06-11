@@ -13,7 +13,7 @@ const Towers = (() => {
     clucko: {
       id: "clucko", name: "CLUCKO", art: "clucko",
       desc: "Robo-rooster. Pelts the path with eggs.",
-      cost: 170, radius: 19, unlockLevel: 1, t4Level: 3,
+      cost: 170, radius: 19, unlockLevel: 1, t4Level: 3, t5Level: 14,
       base: { kind: "bullet", dmg: 1, pierce: 1, cooldown: 0.85, range: 115, projSpeed: 430, projCount: 1, spread: 0.18, dmgType: "sharp", projStyle: "egg", sfx: "shoot" },
       paths: [
         { title: "PECKING POWER", ups: [
@@ -21,6 +21,7 @@ const Towers = (() => {
           { name: "Rapid Peck",       cost: 170,  desc: "Pecks 35% faster.",             fx: s => s.cooldown *= 0.72 },
           { name: "Triple Yolk",      cost: 400,  desc: "Throws 3 eggs in a spread.",    fx: s => { s.projCount = 3; s.spread = 0.3; } },
           { name: "Gatling Gizzard",  cost: 1500, desc: "Egg minigun! +1 dmg, way faster.", fx: s => { s.cooldown *= 0.45; s.dmg += 1; } },
+          { name: "THE EGGSECUTIONER", cost: 9000, desc: "T5: +3 dmg, 2x speed, +3 pierce, eggs detonate.", fx: s => { s.dmg += 3; s.cooldown *= 0.5; s.pierce += 3; s.aoe = Math.max(s.aoe, 45); s.dmgType = "explosive"; } },
         ]},
         { title: "BIRD BRAINS", ups: [
           { name: "Eagle Eye",        cost: 100,  desc: "+30 range.",                    fx: s => s.range += 30 },
@@ -136,9 +137,54 @@ const Towers = (() => {
         ]},
       ],
     },
+
+    farm: {
+      id: "farm", name: "PINGAS FARM", art: "farm",
+      desc: "Grows pingases. Hover to harvest. Don't ask questions.",
+      cost: 900, radius: 22, unlockLevel: 3, t4Level: 13, t5Level: 15,
+      base: { kind: "farm", dmg: 0, pierce: 0, cooldown: 1, range: 60, projCount: 0, dmgType: "none", sfx: "thump",
+              farmCount: 4, farmValue: 30 },
+      paths: [
+        { title: "MASS PRODUCTION", ups: [
+          { name: "Extra Crop",       cost: 350,  desc: "+2 pingases per round.",        fx: s => s.farmCount += 2 },
+          { name: "Fertile Soil",     cost: 500,  desc: "+3 pingases per round.",        fx: s => s.farmCount += 3 },
+          { name: "Pingas Plantation",cost: 1400, desc: "+6 pingases per round.",        fx: s => s.farmCount += 6 },
+          { name: "Pingas Factory",   cost: 3000, desc: "+5 pingases, each worth +$20.", fx: s => { s.farmCount += 5; s.farmValue += 20; } },
+          { name: "PINGAS REPUBLIC",  cost: 12000, desc: "T5: 30 huge pingases worth $80 each.", fx: s => { s.farmCount = 30; s.farmValue = Math.max(s.farmValue, 80); } },
+        ]},
+        { title: "AGRI-BUSINESS", ups: [
+          { name: "Riper Pingases",   cost: 300,  desc: "Each worth +$10.",              fx: s => s.farmValue += 10 },
+          { name: "Golden Skin",      cost: 700,  desc: "Each worth +$15.",              fx: s => s.farmValue += 15 },
+          { name: "Auto-Chute",       cost: 1800, desc: "Uncollected pingases bank at round end.", fx: s => s.autoChute = true },
+          { name: "Pingas Bank",      cost: 4000, desc: "+$25 value, +$200 interest per round.", fx: s => { s.farmValue += 25; s.roundBonus += 200; } },
+        ]},
+      ],
+    },
+
+    slave: {
+      id: "slave", name: "PINGAS SLAVE", art: "slave",
+      desc: "Collects pingases so you don't have to look at them.",
+      cost: 350, radius: 17, unlockLevel: 3, t4Level: 12,
+      base: { kind: "slave", dmg: 0, pierce: 0, cooldown: 0.25, range: 110, projCount: 0, dmgType: "none", sfx: "thump",
+              valueMul: 1 },
+      paths: [
+        { title: "WORK ETHIC", ups: [
+          { name: "Long Arms",        cost: 200,  desc: "+45 collect range.",            fx: s => s.range += 45 },
+          { name: "Roller Feet",      cost: 300,  desc: "+55 collect range.",            fx: s => s.range += 55 },
+          { name: "Pingas Polish",    cost: 800,  desc: "Collected pingases +25% value.", fx: s => s.valueMul += 0.25 },
+          { name: "Employee of the Month", cost: 2200, desc: "+35% value, +$150 per round.", fx: s => { s.valueMul += 0.35; s.roundBonus += 150; } },
+        ]},
+        { title: "SIDE HUSTLE", ups: [
+          { name: "Tip Jar",          cost: 250,  desc: "+$30 every round.",             fx: s => s.roundBonus += 30 },
+          { name: "Lemonade Stand",   cost: 500,  desc: "+$60 every round.",             fx: s => s.roundBonus += 60 },
+          { name: "Pingas Resale",    cost: 1200, desc: "+$150 every round.",            fx: s => s.roundBonus += 150 },
+          { name: "Questionable Crypto", cost: 3000, desc: "+$400 every round. Trust me.", fx: s => s.roundBonus += 400 },
+        ]},
+      ],
+    },
   };
 
-  const ORDER = ["clucko", "drillbert", "slick", "bomzo", "buzzbot", "yolker"];
+  const ORDER = ["clucko", "drillbert", "slick", "bomzo", "buzzbot", "yolker", "farm", "slave"];
   const TARGET_MODES = ["first", "last", "strong", "close"];
 
   let nextId = 1;
@@ -155,6 +201,7 @@ const Towers = (() => {
       this.targetMode = this.def.base.defaultTarget || "first";
       this.cd = 0;
       this.quakeCd = 0;
+      this.prodCd = 2;                       // farm: time to first pingas
       this.flash = 0;                        // muzzle flash timer
       this.aimX = x + 1; this.aimY = y;
       this.recompute();
@@ -170,6 +217,8 @@ const Towers = (() => {
         slow: b.slow ? { factor: b.slow.factor, duration: b.slow.duration } : null,
         dot: null, stun: 0, frags: 0, cluster: 0, chain: 0,
         goldBonus: 0, goldMult: 1, doubleShot: false, quake: null,
+        farmCount: b.farmCount || 0, farmValue: b.farmValue || 0,
+        autoChute: false, valueMul: b.valueMul || 1, roundBonus: 0,
       };
       for (let p = 0; p < 2; p++) {
         for (let t = 0; t < this.tiers[p]; t++) {
@@ -181,18 +230,21 @@ const Towers = (() => {
     }
 
     upgradeCost(path) {
+      const ups = this.def.paths[path].ups;
       const tier = this.tiers[path];
-      if (tier >= 4) return null;
-      return Math.round(this.def.paths[path].ups[tier].cost * this.priceMul);
+      if (tier >= ups.length) return null;
+      return Math.round(ups[tier].cost * this.priceMul);
     }
 
-    // BTD5 rule + tier-4 level gate. Returns {ok, reason}
+    // BTD5 rule + tier-4/5 level gates. Returns {ok, reason}
     canUpgrade(path, playerLevel) {
+      const ups = this.def.paths[path].ups;
       const tier = this.tiers[path];
-      if (tier >= 4) return { ok: false, reason: "MAXED" };
+      if (tier >= ups.length) return { ok: false, reason: "MAXED" };
       // only one path may go past tier 2
       if (tier + 1 > 2 && this.tiers[1 - path] > 2) return { ok: false, reason: "ONE PATH ONLY" };
       if (tier === 3 && playerLevel < this.def.t4Level) return { ok: false, reason: `NEEDS LVL ${this.def.t4Level}` };
+      if (tier === 4 && playerLevel < (this.def.t5Level || 99)) return { ok: false, reason: `NEEDS LVL ${this.def.t5Level}` };
       return { ok: true };
     }
 
@@ -227,6 +279,34 @@ const Towers = (() => {
       this.cd -= dt;
       if (this.flash > 0) this.flash -= dt;
       const s = this.stats;
+
+      // economy towers don't fight
+      if (s.kind === "farm") {
+        this.prodCd -= dt;
+        if (this.prodCd <= 0) {
+          this.prodCd += 42 / s.farmCount;   // spread one round's crop over ~42s
+          const a = Math.random() * Math.PI * 2;
+          const r = 34 + Math.random() * 26;
+          const x = Math.max(14, Math.min(GameMap.W - 14, this.x + Math.cos(a) * r));
+          const y = Math.max(14, Math.min(GameMap.H - 14, this.y + Math.sin(a) * r));
+          game.pickups.push({ x, y, value: s.farmValue, t: 18, seed: Math.floor(Math.random() * 9999), farm: this });
+          if (game.pickups.length > 80) game.pickups.shift();
+        }
+        return;
+      }
+      if (s.kind === "slave") {
+        if (this.cd > 0) return;
+        for (const p of game.pickups) {
+          if (p.dead) continue;
+          if (Math.hypot(p.x - this.x, p.y - this.y) <= s.range) {
+            game.collectPickup(p, s.valueMul);
+            this.cd = 0.25;
+            this.flash = 0.1;
+            break;
+          }
+        }
+        return;
+      }
 
       // seismic slam pulse
       if (s.quake) {

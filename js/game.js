@@ -13,9 +13,14 @@
     return 40 * (L - 1) * (L - 1) + 110 * (L - 1);
   }
   const MAX_LEVEL = 30;
-  const LEVEL_UNLOCKS = { 2: "slick", 4: "bomzo", 6: "buzzbot", 8: "yolker" };
+  const LEVEL_UNLOCKS = { 2: ["slick"], 3: ["farm", "slave"], 4: ["bomzo"], 6: ["buzzbot"], 8: ["yolker"] };
   const T4_BY_LEVEL = {};
-  for (const id of Towers.ORDER) T4_BY_LEVEL[Towers.TYPES[id].t4Level] = Towers.TYPES[id].name;
+  const T5_BY_LEVEL = {};
+  for (const id of Towers.ORDER) {
+    const d = Towers.TYPES[id];
+    T4_BY_LEVEL[d.t4Level] = d.name;
+    if (d.t5Level) T5_BY_LEVEL[d.t5Level] = d.name;
+  }
 
   /* ---------------- game state ---------------- */
   const game = {
@@ -31,11 +36,15 @@
     towers: [],
     projectiles: [],
     effects: [],
+    pickups: [],             // pingases on the ground (hover or slave-collect)
     spawnBuffer: [],
     waves: null,             // active round spawner
     roundT: 0,
     finalRound: false,       // is the 67.67 survival round active
     surviveT: 0,
+    freeplay: false,         // continuing past the difficulty's normal end
+    selectedMap: "desert",
+    demoT: 0, demoI: 0,      // menu attract-mode parade
     speedMul: 1,
     armed: null,             // tower typeId being placed
     selected: null,          // selected tower
@@ -46,6 +55,16 @@
     shake: 0,
 
     addEffect(e) { this.effects.push(e); },
+
+    collectPickup(p, mul = 1) {
+      if (p.dead) return;
+      p.dead = true;
+      const v = Math.round(p.value * mul);
+      this.cash += v;
+      this.stats.cashEarned += v;
+      this.addEffect({ type: "cashpop", x: p.x, y: p.y - 8, v, t: 0.7, max: 0.7 });
+      AudioSys.sfx("coin");
+    },
 
     hitEnemy(e, dmg, dmgType, opts = {}) {
       if (e.dead || dmg <= 0) return 0;
@@ -109,7 +128,8 @@
         this.level++;
         AudioSys.sfx("levelup");
         let msg = `LEVEL UP! ${this.level}`;
-        if (LEVEL_UNLOCKS[this.level]) msg += ` — ${Towers.TYPES[LEVEL_UNLOCKS[this.level]].name} UNLOCKED!`;
+        if (LEVEL_UNLOCKS[this.level]) msg += ` — ${LEVEL_UNLOCKS[this.level].map(id => Towers.TYPES[id].name).join(" & ")} UNLOCKED!`;
+        else if (T5_BY_LEVEL[this.level]) msg += ` — ${T5_BY_LEVEL[this.level]} TIER 5 UNLOCKED!`;
         else if (T4_BY_LEVEL[this.level]) msg += ` — ${T4_BY_LEVEL[this.level]} TIER 4 UNLOCKED!`;
         else { this.cash += 250; msg += " — +$250"; }
         toast(msg);
@@ -125,9 +145,9 @@
     game.round++;
     game.phase = "round";
     game.roundT = 0;
-    const waves = Rounds.ROUNDS[game.round - 1];
+    const waves = Rounds.getWaves(game.round);
     game.waves = waves.map(wv => ({ ...wv, spawned: 0 }));
-    game.finalRound = game.diff.final && game.round === 68;
+    game.finalRound = game.round === 68; // 67.67 plays the same in any mode
     if (game.finalRound) {
       game.surviveT = 0;
       surviveWrap.classList.add("active");
@@ -161,8 +181,16 @@
   function endRound() {
     game.phase = "build";
     game.waves = null;
-    const cash = Rounds.roundCash(game.round);
-    game.cash += cash;
+    game.cash += Rounds.roundCash(game.round);
+    // economy towers: interest + auto-chute banking, then the crop rots
+    for (const t of game.towers) game.cash += t.stats.roundBonus || 0;
+    for (const p of game.pickups) {
+      if (!p.dead && p.farm && p.farm.stats.autoChute && game.towers.includes(p.farm)) {
+        game.cash += p.value;
+        game.stats.cashEarned += p.value;
+      }
+    }
+    game.pickups = [];
     game.gainXp(Rounds.roundXp(game.round));
     AudioSys.sfx("roundEnd");
     if (game.round >= game.totalRounds) { winGame(); return; }
@@ -180,9 +208,23 @@
     endTitle.textContent = "VICTORY!";
     endTitle.style.color = "#ffd23e";
     endStats.innerHTML =
-      `Dr. Pingas reigns supreme on ${game.diff.label}!<br>` +
+      (game.freeplay
+        ? `FREEPLAY CONQUERED — all ${game.round} rounds!<br>`
+        : `Dr. Pingas reigns supreme on ${game.diff.label}!<br>`) +
       `${game.stats.pops} hedgehogs popped &middot; $${Math.floor(game.stats.cashEarned)} earned &middot; level ${game.level}`;
+    btnFreeplay.classList.toggle("hidden", game.round >= Rounds.FREEPLAY_MAX);
     endScreen.classList.remove("hidden");
+  }
+
+  function enterFreeplay() {
+    game.freeplay = true;
+    game.totalRounds = Rounds.FREEPLAY_MAX;
+    game.won = false;
+    game.phase = "build";
+    endScreen.classList.add("hidden");
+    ui.syncButtons();
+    toast("FREE PLAY — SURVIVE TO ROUND 120!");
+    if (chkAuto.checked) setTimeout(() => { if (game.phase === "build") startRound(); }, 900);
   }
 
   function loseGame() {
@@ -195,6 +237,7 @@
     endStats.innerHTML =
       `The citadel has fallen on round ${game.round}...<br>` +
       `${game.stats.pops} hedgehogs popped &middot; ${game.stats.towersBuilt} badniks deployed`;
+    btnFreeplay.classList.add("hidden");
     endScreen.classList.remove("hidden");
   }
 
@@ -206,9 +249,19 @@
       if (game.finalRound) {
         game.surviveT += dt;
         if (game.surviveT >= Rounds.FINAL_TIME) {
-          // survived 67.67 — instant win, leftover enemies don't matter
-          game.round = game.totalRounds;
-          winGame();
+          // survived 67.67! leftover enemies scatter — no kills required
+          game.enemies = [];
+          game.spawnBuffer.length = 0;
+          game.finalRound = false;
+          surviveWrap.classList.remove("active");
+          game.shake = 0.5;
+          AudioSys.sfx("boom");
+          if (game.round >= game.totalRounds) {
+            winGame();
+          } else {
+            toast("SURVIVED 67.67! THE HORDE SCATTERS!");
+            endRound();
+          }
           return;
         }
       }
@@ -246,6 +299,34 @@
       endRound();
     }
 
+    // pingas pickups: expiry + hover harvesting
+    if (game.phase === "round" || game.phase === "build") {
+      for (const p of game.pickups) {
+        p.t -= dt;
+        if (p.t <= 0) p.dead = true;
+        else if (!p.dead && game.mouse.over &&
+                 Math.hypot(game.mouse.x - p.x, game.mouse.y - p.y) < 26) {
+          game.collectPickup(p);
+        }
+      }
+      game.pickups = game.pickups.filter(p => !p.dead);
+    }
+
+    // menu attract mode: an endless hedgehog parade behind the title
+    if (game.phase === "menu") {
+      game.demoT -= dt;
+      if (game.demoT <= 0) {
+        game.demoT = 1.2;
+        const cycle = ["blue", "red", "green", "yellow", "pink", "shadow", "metal", "gold", "boss"];
+        const t = cycle[game.demoI++ % cycle.length];
+        if (game.enemies.length < 24) {
+          game.enemies.push(new Enemies.Enemy(t, 0, t === "boss" ? { hp: 60 } : {}));
+        }
+      }
+      for (const e of game.enemies) e.update(dt, game);
+      game.enemies = game.enemies.filter(e => !e.dead);
+    }
+
     // effects always animate
     for (const fx of game.effects) {
       fx.t -= dt;
@@ -271,6 +352,9 @@
       ctx.fillStyle = `rgba(120,50,200,${0.4 * (fx.t / fx.max)})`;
       ctx.beginPath(); ctx.arc(fx.x, fx.y, fx.r, 0, Math.PI * 2); ctx.fill();
     }
+
+    // pingases on the ground (censored for your protection — hover to harvest)
+    for (const p of game.pickups) drawPickup(p);
 
     // selected tower range
     if (game.selected) drawRange(game.selected.x, game.selected.y, game.selected.stats.range, true);
@@ -334,6 +418,12 @@
           ctx.fillText("clink", fx.x - 14, fx.y - 8);
           break;
         }
+        case "cashpop": {
+          ctx.fillStyle = `rgba(255,210,62,${Math.min(1, k * 2)})`;
+          ctx.font = "bold 13px Courier New";
+          ctx.fillText("+$" + fx.v, fx.x - 12, fx.y - (1 - k) * 18);
+          break;
+        }
       }
     }
 
@@ -349,6 +439,22 @@
     }
 
     ctx.restore();
+  }
+
+  // the infamous blurred chunk. you know what it is. hover to collect.
+  const PINGAS_COLS = ["#f2a0c0", "#e88bb0", "#f8c0d8", "#d9789e", "#f0b0a0", "#e89cc8"];
+  function drawPickup(p) {
+    if (p.t < 3 && Math.floor(p.t * 5) % 2 === 0) return; // expiring blink
+    const shift = Math.floor(performance.now() / 280);
+    for (let i = 0; i < 4; i++) {
+      for (let j = 0; j < 3; j++) {
+        ctx.fillStyle = PINGAS_COLS[(p.seed + i * 3 + j * 7 + shift) % PINGAS_COLS.length];
+        ctx.fillRect(p.x - 8 + i * 4, p.y - 6 + j * 4, 4, 4);
+      }
+    }
+    ctx.strokeStyle = "#181425";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(p.x - 8.5, p.y - 6.5, 17, 13);
   }
 
   // BTD-style: neutral circle normally, red only when it can't go there
@@ -390,6 +496,7 @@
   const endTitle = document.getElementById("end-title");
   const endStats = document.getElementById("end-stats");
   const toastEl = document.getElementById("toast");
+  const btnFreeplay = document.getElementById("btn-freeplay");
 
   /* ---------------- UI ---------------- */
   const ui = {
@@ -447,22 +554,34 @@
       ic.drawImage(Sprites.get(t.def.art, { scale: 3 }), 0, 0);
       upName.textContent = t.def.name;
       const s = t.stats;
-      const rate = (1 / s.cooldown).toFixed(1);
-      let extra = [];
-      if (s.aoe) extra.push(`blast ${Math.round(s.aoe)}`);
-      if (s.slow) extra.push(`slow ${Math.round((1 - s.slow.factor) * 100)}%`);
-      if (s.dot) extra.push(`acid ${(s.dot.dmg / s.dot.interval).toFixed(1)}/s`);
-      if (s.metalPop && t.def.base.dmgType === "sharp") extra.push("pops metal");
-      upStats.textContent =
-        `dmg ${s.dmg} | pierce ${s.pierce} | ${rate}/s | range ${Math.round(s.range)}` +
-        (extra.length ? `\n${extra.join(" | ")}` : "");
+      if (s.kind === "farm") {
+        upStats.textContent =
+          `${s.farmCount} pingases/round x $${s.farmValue}` +
+          (s.autoChute ? "\nbanks uncollected at round end" : "") +
+          (s.roundBonus ? `\n+$${s.roundBonus} interest/round` : "");
+      } else if (s.kind === "slave") {
+        upStats.textContent =
+          `collect range ${Math.round(s.range)} | value x${s.valueMul.toFixed(2)}` +
+          (s.roundBonus ? `\n+$${s.roundBonus}/round` : "");
+      } else {
+        const rate = (1 / s.cooldown).toFixed(1);
+        let extra = [];
+        if (s.aoe) extra.push(`blast ${Math.round(s.aoe)}`);
+        if (s.slow) extra.push(`slow ${Math.round((1 - s.slow.factor) * 100)}%`);
+        if (s.dot) extra.push(`acid ${(s.dot.dmg / s.dot.interval).toFixed(1)}/s`);
+        if (s.metalPop && t.def.base.dmgType === "sharp") extra.push("pops metal");
+        upStats.textContent =
+          `dmg ${s.dmg} | pierce ${s.pierce} | ${rate}/s | range ${Math.round(s.range)}` +
+          (extra.length ? `\n${extra.join(" | ")}` : "");
+      }
+      btnTarget.style.display = (s.kind === "farm" || s.kind === "slave") ? "none" : "";
 
       upPaths.innerHTML = "";
       for (let p = 0; p < 2; p++) {
         const pd = t.def.paths[p];
         const div = document.createElement("div");
         div.className = "upath";
-        const pips = [0, 1, 2, 3].map(i =>
+        const pips = pd.ups.map((_, i) =>
           `<span class="pip${i < t.tiers[p] ? " on" : ""}"></span>`).join("");
         div.innerHTML = `<div class="upath-title">${pd.title}<span class="pips">${pips}</span></div>`;
         const tier = t.tiers[p];
@@ -478,7 +597,7 @@
           const afford = Math.floor(game.cash) >= cost;
           btn.innerHTML =
             `<span class="ub-cost">${chk.ok ? "$" + cost : chk.reason}</span>` +
-            `<span class="ub-name">${tier === 3 ? "★ " : ""}${up.name}</span>` +
+            `<span class="ub-name">${tier === 3 ? "★ " : tier === 4 ? "★★ " : ""}${up.name}</span>` +
             `<div class="ub-desc">${up.desc}</div>`;
           if (!chk.ok) btn.classList.add("locked");
           else if (!afford) btn.classList.add("poor");
@@ -508,9 +627,10 @@
       livesVal.textContent = Math.max(0, Math.ceil(game.lives));
       cashVal.textContent = "$" + Math.floor(game.cash);
       if (game.diff) {
-        const shown = game.diff.final
-          ? (game.round >= 68 ? "FINAL 67.67" : `${game.round}/67.67`)
-          : `${game.round}/${game.totalRounds}`;
+        let shown;
+        if (game.freeplay) shown = game.round === 68 ? "67.67 FREEPLAY" : `${game.round}/120 FREEPLAY`;
+        else if (game.diff.final) shown = game.round >= 68 ? "FINAL 67.67" : `${game.round}/67.67`;
+        else shown = `${game.round}/${game.totalRounds}`;
         roundVal.textContent = "Round " + shown;
       }
       levelVal.textContent = "LVL " + game.level;
@@ -636,7 +756,25 @@
   document.getElementById("btn-menu").addEventListener("click", () => {
     endScreen.classList.add("hidden");
     menu.classList.remove("hidden");
+    // clear the field so the title parade marches on clean ground
+    game.enemies = []; game.towers = []; game.projectiles = [];
+    game.pickups = []; game.effects = [];
     game.phase = "menu";
+  });
+  btnFreeplay.addEventListener("click", enterFreeplay);
+
+  for (const btn of document.querySelectorAll(".map-btn")) {
+    btn.addEventListener("click", () => {
+      game.selectedMap = btn.dataset.map;
+      for (const b of document.querySelectorAll(".map-btn")) b.classList.toggle("sel", b === btn);
+      GameMap.load(game.selectedMap);
+      game.enemies = []; // restart the parade on the new map
+      AudioSys.sfx("place");
+    });
+  }
+  document.getElementById("btn-multi").addEventListener("click", () => {
+    AudioSys.sfx("cantPlace");
+    toast("MULTIPLAYER — COMING SOON!");
   });
 
   window.addEventListener("keydown", ev => {
@@ -654,7 +792,7 @@
       btnSfx.click();
     } else if (k === "m" || k === "M") {
       btnMusic.click();
-    } else if (k >= "1" && k <= "6") {
+    } else if (k >= "1" && k <= "8") {
       const id = Towers.ORDER[+k - 1];
       if (id) armTower(id);
     }
@@ -663,9 +801,13 @@
   /* ---------------- new game ---------------- */
   function newGame(diffId) {
     const d = Rounds.DIFFS[diffId];
+    GameMap.load(game.selectedMap);
     game.diffId = diffId;
     game.diff = d;
     game.totalRounds = d.rounds;
+    game.freeplay = false;
+    game.pickups = [];
+    btnFreeplay.classList.add("hidden");
     game.round = 0;
     game.lives = d.lives;
     game.cash = d.cash;
@@ -698,7 +840,7 @@
   function frame(now) {
     let dt = Math.min(0.05, (now - lastT) / 1000);
     lastT = now;
-    if (game.phase === "round" || game.phase === "build") {
+    if (game.phase === "round" || game.phase === "build" || game.phase === "menu") {
       const eff = dt * game.speedMul;
       const n = Math.max(1, Math.ceil(eff / (1 / 60)));
       const sub = eff / n;

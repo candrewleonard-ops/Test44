@@ -56,6 +56,7 @@ const AudioSys = (() => {
     thump()    { tone(160, 0.1, "square", 0.05, -80); },
     laser()    { tone(1400, 0.06, "sawtooth", 0.022, -900); },
     pop()      { tone(520 + Math.random() * 200, 0.07, "square", 0.06, 300); noise(0.04, 0.03); },
+    coin()     { tone(988, 0.05, "square", 0.045); tone(1319, 0.09, "square", 0.045, 0, 0.05); },
     metal()    { tone(220, 0.08, "sawtooth", 0.05, -60); },
     boom()     { noise(0.25, 0.12); tone(90, 0.25, "triangle", 0.12, -50); },
     place()    { tone(330, 0.08, "square", 0.06); tone(495, 0.1, "square", 0.06, 0, 0.07); },

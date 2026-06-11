@@ -43,12 +43,17 @@
             <canvas id="title-art" width="260" height="120"></canvas>
             <h1 class="title">PINGAS<br>TOWER DEFENSE</h1>
             <p class="subtitle">Dr. Pingas needs YOU. The blue blurs are coming.<br>Deploy the badnik brigade!</p>
+            <div class="map-row">
+              <button class="map-btn sel" data-map="desert">DESERT DOMAIN</button>
+              <button class="map-btn" data-map="hills">GREEN HILL GAUNTLET</button>
+            </div>
             <div class="diff-row">
               <button class="diff-btn" data-diff="easy">EASY<small>30 rounds &middot; 200 lives</small></button>
               <button class="diff-btn" data-diff="medium">MEDIUM<small>50 rounds &middot; 150 lives</small></button>
               <button class="diff-btn" data-diff="hard">HARD<small>67.67 rounds &middot; 100 lives</small></button>
             </div>
-            <p class="hint">Place towers &middot; pop hedgehogs &middot; earn XP &middot; unlock tier 4</p>
+            <button id="btn-multi">&#128274; MULTIPLAYER</button>
+            <p class="hint">Place towers &middot; pop hedgehogs &middot; unlock tier 5 &middot; freeplay to 120</p>
           </div>
         </div>
 
@@ -58,6 +63,7 @@
             <h1 class="title" id="end-title">VICTORY!</h1>
             <p id="end-stats" class="subtitle"></p>
             <div class="diff-row">
+              <button id="btn-freeplay" class="diff-btn hidden">FREE PLAY<small>continue to round 120</small></button>
               <button id="btn-replay" class="diff-btn">PLAY AGAIN</button>
               <button id="btn-menu" class="diff-btn">MAIN MENU</button>
             </div>

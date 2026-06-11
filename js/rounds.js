@@ -97,11 +97,37 @@ const Rounds = (() => {
                w(30, 40, "gold", 0.25)],
   ];
 
-  // gold & boss hedgehogs toughen up late game; bosses run 15% lighter
+  // gold & boss hedgehogs toughen up late game; bosses run 15% lighter.
+  // gold growth caps at 4x (round 100) so freeplay stays winnable.
   function hpScale(round, typeId) {
     if (typeId === "boss" || typeId === "final") return 0.85;
-    if (typeId === "gold" && round > 40) return 1 + 0.05 * (round - 40);
+    if (typeId === "gold" && round > 40) return Math.min(1 + 0.05 * (round - 40), 4);
     return 1;
+  }
+
+  /* ---- FREEPLAY: rounds 69-120, steady but sane growth ---- */
+  const FREEPLAY_MAX = 120;
+
+  function freeplayWaves(r) {
+    const k = r - 68;                       // 1..52
+    const ws = [
+      w(0, 40 + k * 2, "gold", Math.max(0.08, 0.2 - k * 0.0015)),
+      w(4, 24 + k, "shadow", 0.22),
+    ];
+    if (r % 2 === 0) ws.push(w(8, 16 + k, "metal", 0.25));
+    if (r % 3 === 0) ws.push(w(6, 2 + Math.floor(k / 7), "boss", 4, 4000 + k * 420));
+    if (r % 10 === 0) ws.push(w(12, 1, "boss", 0, 16000 + k * 1100));
+    if (r === FREEPLAY_MAX) {
+      // the last stand: a Golden Blur rematch plus the kitchen sink
+      ws.push(w(10, 1, "final", 0, 60000));
+      ws.push(w(20, 4, "boss", 4, 9000));
+    }
+    return ws;
+  }
+
+  // waves for any round number, table or freeplay
+  function getWaves(r) {
+    return r <= ROUNDS.length ? ROUNDS[r - 1] : freeplayWaves(r);
   }
 
   // XP awarded for clearing a round
@@ -110,5 +136,5 @@ const Rounds = (() => {
   // cash awarded for clearing a round
   function roundCash(round) { return 100 + round; }
 
-  return { DIFFS, ROUNDS, FINAL_TIME, hpScale, roundXp, roundCash };
+  return { DIFFS, ROUNDS, FINAL_TIME, FREEPLAY_MAX, getWaves, hpScale, roundXp, roundCash };
 })();

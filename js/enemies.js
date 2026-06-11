@@ -6,6 +6,9 @@
 
 const Enemies = (() => {
 
+  // global pace: every enemy moves 25% slower than its listed speed
+  const WORLD_SPEED = 0.75;
+
   const TYPES = {
     // hedgehog layers (BTD-style): pop one, it sheds the next color down.
     // blue (1 hit) -> red (2) -> green (3) -> yellow (4) -> pink (5)
@@ -19,7 +22,8 @@ const Enemies = (() => {
     gold:   { tier: "gold",   hp: 14, speed: 96,  xp: 25, scale: 2.4, radius: 16, children: ["shadow", "shadow"] },
     // bosses: hp passed at spawn time; always gold, bigger, more health
     boss:   { tier: "gold",   hp: 1200, speed: 42, xp: 250, scale: 3.4, radius: 26, children: ["gold", "gold", "gold", "gold"], boss: true },
-    final:  { tier: "gold",   hp: 30000, speed: 96, xp: 5000, scale: 4.6, radius: 36, children: [], boss: true, final: true },
+    // (final keeps its real-world pace despite the global slowdown — it's the finale)
+    final:  { tier: "gold",   hp: 30000, speed: 128, xp: 5000, scale: 4.6, radius: 36, children: [], boss: true, final: true },
   };
 
   // RBE = damage you take if it leaks (its hp + everything inside it)
@@ -63,7 +67,7 @@ const Enemies = (() => {
     get rbe() { return this.hp + this.def.children.reduce((a, c) => a + rbe(c), 0); }
 
     currentSpeed() {
-      let s = this.def.speed * this.speedMul;
+      let s = this.def.speed * WORLD_SPEED * this.speedMul;
       if (this.slowTimer > 0) {
         // bosses shrug off half of the slow
         const f = this.isBoss ? (this.slowFactor + 1) / 2 : this.slowFactor;

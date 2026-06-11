@@ -42,12 +42,23 @@ python3 -m http.server 8080     # then visit http://localhost:8080
 
 | Tower | Cost | Role |
 |---|---|---|
-| CLUCKO | $170 | Robo-rooster; cheap rapid egg-pelter |
+| CLUCKO | $170 | Robo-rooster; cheap rapid egg-pelter (tier 5: THE EGGSECUTIONER) |
 | DRILLBERT | $360 | Drill tank; 360° drill volleys |
 | SLICK | $300 | Oil-slinger; slows, then melts with acid |
 | BOMZO | $650 | Walking bomb; big splash, frags, clusters |
 | BUZZBOT | $800 | Laser wasp; very fast energy bolts |
 | THE YOLKER | $2000 | Egg artillery; hits anything on the map |
+| PINGAS FARM | $900 | Grows censored pingas chunks — hover to harvest (tier 5: PINGAS REPUBLIC) |
+| PINGAS SLAVE | $350 | Auto-collects pingases in range; side-hustle income upgrades |
+
+## Maps & extras
+
+- **Two maps**: Desert Domain and Green Hill Gauntlet, picked from the title
+  screen (which runs a live hedgehog parade behind the menu).
+- **Free play**: after winning any difficulty, continue the same save up to
+  **round 120** with steadily growing freeplay waves. Surviving 67.67 in
+  freeplay scatters the horde and play simply continues.
+- **Multiplayer**: button's there. It does nothing. Dream big.
 
 ## Controls
 

@@ -225,7 +225,7 @@ html, body {
 .overlay {
   position: absolute; inset: 0; z-index: 10;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(14, 10, 24, .82);
+  background: rgba(14, 10, 24, .68);
 }
 .overlay.hidden { display: none; }
 .menu-card { text-align: center; padding: 20px; }
@@ -252,6 +252,29 @@ html, body {
 .diff-btn[data-diff="medium"] { box-shadow: inset 0 -3px 0 #e8a020; }
 .diff-btn[data-diff="hard"] { box-shadow: inset 0 -3px 0 #e84545; }
 .hint { font-size: 13px; opacity: .55; }
+
+.map-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 14px; }
+.map-btn {
+  font-family: inherit; font-weight: bold; font-size: 14px; letter-spacing: 1px;
+  color: var(--txt); background: var(--ui-panel2);
+  border: 3px solid var(--ui-border); border-bottom-width: 5px;
+  border-radius: 7px; padding: 8px 16px; cursor: pointer; opacity: .65;
+}
+.map-btn:hover { background: var(--ui-light); opacity: 1; }
+.map-btn.sel { outline: 3px solid var(--gold); opacity: 1; }
+.map-btn.sel::before { content: "\25B8 "; color: var(--gold); }
+
+#btn-multi {
+  font-family: inherit; font-weight: bold; font-size: 16px; letter-spacing: 2px;
+  color: #b8a8e0; background: #2e2742;
+  border: 3px solid var(--ui-border); border-bottom-width: 6px;
+  border-radius: 8px; padding: 10px 28px; cursor: pointer; margin-bottom: 14px;
+}
+#btn-multi:hover { background: var(--ui-light); color: var(--txt); }
+#btn-multi:active { border-bottom-width: 3px; transform: translateY(3px); }
+
+.diff-btn.hidden { display: none; }
+#btn-freeplay { box-shadow: inset 0 -3px 0 var(--gold); }
 
 /* ===== toast ===== */
 #toast {

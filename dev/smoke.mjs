@@ -157,6 +157,8 @@ await page.evaluate(() => {
   for (const t of g.towers) if (t.def.id === "buzzbot") t.targetMode = "strong";
   // bombers for the gold floods
   maxed("bomzo", 410, 480, 0); maxed("bomzo", 560, 300, 1);
+  // economy corner: farm drops pingases, slave hoovers them up
+  maxed("farm", 350, 60, 0); maxed("slave", 430, 60, 0);
 });
 await page.waitForTimeout(300);
 
@@ -183,6 +185,58 @@ console.log("END:", end);
 await page.screenshot({ path: path.join(shots, "07-end.png") });
 if (end.phase !== "over") errors.push("game did not reach an end state");
 else if (!end.won) console.log("NOTE: lost the final — check balance/screenshots");
+
+// ---- freeplay: continue past 67.67 into round 69 ----
+if (end.won) {
+  console.log("pre-freeplay:", await page.evaluate(() => ({
+    auto: document.getElementById("chk-auto").checked,
+    total: PTD.game.totalRounds,
+  })));
+  await page.click("#btn-freeplay");
+  await page.waitForTimeout(2000);
+  // a player may also start manually — either way round 69 must run
+  if (await page.evaluate(() => PTD.game.phase === "build")) {
+    console.log("auto-start idle, clicking START");
+    await page.click("#btn-start");
+  }
+  await page.waitForTimeout(4000);
+  const fp = await page.evaluate(() => ({
+    phase: PTD.game.phase, round: PTD.game.round,
+    freeplay: PTD.game.freeplay, enemies: PTD.game.enemies.length,
+    pickups: PTD.game.pickups.length,
+  }));
+  console.log("freeplay:", fp);
+  if (!fp.freeplay || fp.round < 69) errors.push("freeplay did not continue past 67.67");
+  await page.screenshot({ path: path.join(shots, "10-freeplay.png") });
+}
+
+// ---- second map: menu -> GREEN HILL GAUNTLET -> play round 1 ----
+await page.evaluate(() => {
+  document.getElementById("menu").classList.remove("hidden");
+  document.getElementById("endscreen").classList.add("hidden");
+  const g = PTD.game;
+  g.enemies = []; g.towers = []; g.projectiles = []; g.pickups = []; g.waves = null;
+  g.phase = "menu";
+});
+await page.click('.map-btn[data-map="hills"]');
+await page.waitForTimeout(500);
+await page.screenshot({ path: path.join(shots, "11-menu-hills.png") });
+await page.click('.diff-btn[data-diff="easy"]');
+await page.evaluate(() => {
+  if (PTD.GameMap.canPlace(500, 170, 19, PTD.game.towers)) {
+    PTD.game.towers.push(new PTD.Towers.Tower("clucko", 500, 170, PTD.game.diff.priceMul));
+  }
+  PTD.startRound();
+});
+await page.waitForTimeout(5000);
+const m2 = await page.evaluate(() => ({
+  phase: PTD.game.phase, round: PTD.game.round,
+  lives: PTD.game.lives, map: PTD.GameMap.currentId,
+}));
+console.log("map2:", m2);
+if (m2.map !== "hills") errors.push("second map did not load");
+if (m2.phase !== "round" && m2.phase !== "build") errors.push("map2 round did not run");
+await page.screenshot({ path: path.join(shots, "12-map2-play.png") });
 
 // fps sanity at 3x with lots of action
 const fps = await page.evaluate(() => new Promise(res => {

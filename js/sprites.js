@@ -32,6 +32,7 @@ const Sprites = (() => {
     E: "#1b2a52", // eye dark blue
     B: "#2a62e0", // body (default blue, swapped per enemy)
     D: "#1a3da0", // body shade
+    F: "#f08bb8", // pingas pink
   };
 
   /* ---------------- ENEMY: hedgehog "speedster" (faces right) ---------------- */
@@ -208,6 +209,46 @@ const Sprites = (() => {
     "..KKKKKKKK......",
   ];
 
+  // PINGAS FARM — a barn that grows... those.
+  const T_FARM = [
+    "....KKKKKKKK....",
+    "...KNNNNNNNNK...",
+    "..KNNNNNNNNNNK..",
+    ".KNNNNNNNNNNNNK.",
+    "KKKKKKKKKKKKKKKK",
+    ".KRRRRRRRRRRRRK.",
+    ".KRWWRRRRRRWWRK.",
+    ".KRRRRKKKKRRRRK.",
+    ".KRRRRKWWKRRRRK.",
+    ".KRWWRKWWKRWWRK.",
+    ".KRRRRKKKKRRRRK.",
+    ".KKKKKKKKKKKKKK.",
+    "..FFF.F..F.FFF..",
+    "..F.FF.FF.FF.F..",
+    "................",
+    "................",
+  ];
+
+  // PINGAS SLAVE — hooded little collector with a sack. He has seen things.
+  const T_SLAVE = [
+    ".....KKKK.......",
+    "....KNNNNK......",
+    "...KNNNNNNK.....",
+    "...KNWNNWNK.....",
+    "...KNNNNNNK.....",
+    "....KNNNNK......",
+    "..KKMMMMMMKK....",
+    ".KMMMMMMMMMMK...",
+    ".KMKMMMMMMKMK...",
+    ".KK.KMMMMK.KK...",
+    "....KMMMMK.KKKK.",
+    "....KMMMMKKhFhK.",
+    "....KMKKMK.KhhK.",
+    "....KM..MK..KK..",
+    "....KK..KK......",
+    "................",
+  ];
+
   /* ---------------- BASE: DR. PINGAS ---------------- */
   const PINGAS = [
     "......KKKKKK........",
@@ -344,6 +385,7 @@ const Sprites = (() => {
     hedge: HEDGE, hedge_boss: HEDGE_BOSS,
     clucko: T_CLUCKO, drillbert: T_DRILLBERT, slick: T_SLICK,
     bomzo: T_BOMZO, buzzbot: T_BUZZBOT, yolker: T_YOLKER,
+    farm: T_FARM, slave: T_SLAVE,
     pingas: PINGAS,
     cactus: CACTUS, bush: BUSH, rock: ROCK, castle: CASTLE, sign: SIGN,
     icon_heart: ICON_HEART, icon_coin: ICON_COIN, icon_flag: ICON_FLAG, icon_star: ICON_STAR,
