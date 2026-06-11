@@ -28,6 +28,7 @@ const Towers = (() => {
           { name: "Hardboiled",       cost: 160,  desc: "Cracks METAL hedgehogs. +1 pierce.", fx: s => { s.metalPop = true; s.pierce += 1; } },
           { name: "Eggsplosive Yolks",cost: 450,  desc: "Eggs burst in a small blast.",  fx: s => { s.aoe = Math.max(s.aoe, 32); s.dmgType = "explosive"; } },
           { name: "Cluck of Doom",    cost: 1700, desc: "Huge blasts, +2 dmg.",          fx: s => { s.aoe = Math.max(s.aoe, 58); s.dmg += 2; } },
+          { name: "NUCLEAR NUGGET",   cost: 12000, desc: "T5: +4 dmg, massive blasts that stun.", fx: s => { s.dmg += 4; s.aoe = Math.max(s.aoe, 95); s.stun = Math.max(s.stun, 0.4); } },
         ]},
       ],
     },
@@ -120,7 +121,7 @@ const Towers = (() => {
     yolker: {
       id: "yolker", name: "THE YOLKER", art: "yolker",
       desc: "Egg artillery. Hits anything, anywhere on the map.",
-      cost: 2000, radius: 22, unlockLevel: 8, t4Level: 11,
+      cost: 2000, radius: 22, unlockLevel: 8, t4Level: 11, t5Level: 16,
       base: { kind: "ray", dmg: 10, pierce: 1, cooldown: 2.0, range: 4000, projCount: 1, aoe: 26, dmgType: "explosive", sfx: "boom", defaultTarget: "strong" },
       paths: [
         { title: "ARTILLERY SCHOOL", ups: [
@@ -128,6 +129,7 @@ const Towers = (() => {
           { name: "Rapid Loader",     cost: 950,  desc: "Reloads 30% faster.",           fx: s => s.cooldown *= 0.7 },
           { name: "Devastator",       cost: 2000, desc: "+14 dmg, bigger splash.",       fx: s => { s.dmg += 14; s.aoe = Math.max(s.aoe, 48); } },
           { name: "PINGAS PARTICLE BEAM", cost: 5500, desc: "+45 dmg of pure science.",  fx: s => { s.dmg += 45; s.cooldown *= 0.8; } },
+          { name: "THE OMELETTE PROTOCOL", cost: 22000, desc: "T5: +120 dmg, huge splash, faster. Goodbye.", fx: s => { s.dmg += 120; s.aoe = Math.max(s.aoe, 70); s.cooldown *= 0.7; } },
         ]},
         { title: "EGGSPLOSIVES", ups: [
           { name: "Wide Shells",      cost: 700,  desc: "Big splash radius.",            fx: s => s.aoe = Math.max(s.aoe, 64) },
@@ -143,20 +145,20 @@ const Towers = (() => {
       desc: "Grows pingases. Hover to harvest. Don't ask questions.",
       cost: 900, radius: 22, unlockLevel: 3, t4Level: 13, t5Level: 15,
       base: { kind: "farm", dmg: 0, pierce: 0, cooldown: 1, range: 60, projCount: 0, dmgType: "none", sfx: "thump",
-              farmCount: 4, farmValue: 30 },
+              farmCount: 4, farmValue: 45 },
       paths: [
         { title: "MASS PRODUCTION", ups: [
           { name: "Extra Crop",       cost: 350,  desc: "+2 pingases per round.",        fx: s => s.farmCount += 2 },
           { name: "Fertile Soil",     cost: 500,  desc: "+3 pingases per round.",        fx: s => s.farmCount += 3 },
           { name: "Pingas Plantation",cost: 1400, desc: "+6 pingases per round.",        fx: s => s.farmCount += 6 },
-          { name: "Pingas Factory",   cost: 3000, desc: "+5 pingases, each worth +$20.", fx: s => { s.farmCount += 5; s.farmValue += 20; } },
-          { name: "PINGAS REPUBLIC",  cost: 12000, desc: "T5: 30 huge pingases worth $80 each.", fx: s => { s.farmCount = 30; s.farmValue = Math.max(s.farmValue, 80); } },
+          { name: "Pingas Factory",   cost: 3000, desc: "+5 pingases, each worth +$30.", fx: s => { s.farmCount += 5; s.farmValue += 30; } },
+          { name: "PINGAS REPUBLIC",  cost: 12000, desc: "T5: 30 huge pingases worth $120 each.", fx: s => { s.farmCount = 30; s.farmValue = Math.max(s.farmValue, 120); } },
         ]},
         { title: "AGRI-BUSINESS", ups: [
-          { name: "Riper Pingases",   cost: 300,  desc: "Each worth +$10.",              fx: s => s.farmValue += 10 },
-          { name: "Golden Skin",      cost: 700,  desc: "Each worth +$15.",              fx: s => s.farmValue += 15 },
+          { name: "Riper Pingases",   cost: 300,  desc: "Each worth +$15.",              fx: s => s.farmValue += 15 },
+          { name: "Golden Skin",      cost: 700,  desc: "Each worth +$22.",              fx: s => s.farmValue += 22 },
           { name: "Auto-Chute",       cost: 1800, desc: "Uncollected pingases bank at round end.", fx: s => s.autoChute = true },
-          { name: "Pingas Bank",      cost: 4000, desc: "+$25 value, +$200 interest per round.", fx: s => { s.farmValue += 25; s.roundBonus += 200; } },
+          { name: "Pingas Bank",      cost: 4000, desc: "+$38 value, +$300 interest per round.", fx: s => { s.farmValue += 38; s.roundBonus += 300; } },
         ]},
       ],
     },

@@ -22,6 +22,11 @@ const Enemies = (() => {
     gold:   { tier: "gold",   hp: 14, speed: 96,  xp: 25, scale: 2.4, radius: 16, children: ["shadow", "shadow"] },
     // bosses: hp passed at spawn time; always gold, bigger, more health
     boss:   { tier: "gold",   hp: 1200, speed: 42, xp: 250, scale: 3.4, radius: 26, children: ["gold", "gold", "gold", "gold"], boss: true },
+    // MOAB-class mega hedgehogs (round 45+): blue -> red -> green, like
+    // MOAB -> BFB -> ZOMG. Each one bursts into the sonics inside it.
+    moab_blue:  { tier: "blue",  hp: 2200,  speed: 40, xp: 300,  scale: 4.0, radius: 30, children: ["gold", "gold", "gold", "gold"], boss: true },
+    moab_red:   { tier: "red",   hp: 6500,  speed: 32, xp: 800,  scale: 4.4, radius: 33, children: ["moab_blue", "moab_blue"], boss: true },
+    moab_green: { tier: "green", hp: 16000, speed: 26, xp: 2000, scale: 4.8, radius: 36, children: ["moab_red", "moab_red"], boss: true },
     // (final keeps its real-world pace despite the global slowdown — it's the finale)
     final:  { tier: "gold",   hp: 30000, speed: 128, xp: 5000, scale: 4.6, radius: 36, children: [], boss: true, final: true },
   };

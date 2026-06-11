@@ -65,34 +65,38 @@ const Rounds = (() => {
     /* 42 */ [w(0, 60, "shadow", 0.18), w(6, 30, "metal", 0.3)],
     /* 43 */ [w(0, 2, "boss", 6, 2000), w(4, 20, "gold", 0.7)],
     /* 44 */ [w(0, 56, "gold", 0.3)],
-    /* 45 */ [w(0, 80, "pink", 0.1), w(6, 40, "shadow", 0.2)],
+    /* 45 — MOAB debut: the MEGA BLUE crawls out */
+              [w(0, 80, "pink", 0.1), w(6, 40, "shadow", 0.2), w(12, 1, "moab_blue", 0)],
     /* 46 */ [w(0, 3, "boss", 5, 1800), w(5, 24, "gold", 0.6)],
-    /* 47 */ [w(0, 64, "gold", 0.28)],
+    /* 47 */ [w(0, 64, "gold", 0.28), w(8, 2, "moab_blue", 6)],
     /* 48 */ [w(0, 60, "metal", 0.2), w(5, 50, "shadow", 0.22)],
-    /* 49 */ [w(0, 70, "gold", 0.25)],
+    /* 49 */ [w(0, 70, "gold", 0.25), w(6, 2, "moab_blue", 5)],
     /* 50 — MEDIUM FINAL: the triple threat */
-              [w(0, 1, "boss", 0, 9500), w(6, 2, "boss", 6, 2600), w(14, 20, "gold", 0.6)],
+              [w(0, 1, "boss", 0, 9500), w(6, 2, "boss", 6, 2600), w(14, 20, "gold", 0.6), w(18, 2, "moab_blue", 6)],
     /* 51 */ [w(0, 80, "gold", 0.22)],
-    /* 52 */ [w(0, 4, "boss", 4, 2400), w(6, 40, "shadow", 0.25)],
+    /* 52 */ [w(0, 4, "boss", 4, 2400), w(6, 40, "shadow", 0.25), w(8, 3, "moab_blue", 5)],
     /* 53 */ [w(0, 90, "gold", 0.2)],
-    /* 54 */ [w(0, 100, "shadow", 0.12), w(5, 60, "metal", 0.15)],
-    /* 55 */ [w(0, 2, "boss", 6, 6500), w(5, 50, "gold", 0.3)],
+    /* 54 */ [w(0, 100, "shadow", 0.12), w(5, 60, "metal", 0.15), w(10, 3, "moab_blue", 4)],
+    /* 55 — MEGA RED debut */
+              [w(0, 2, "boss", 6, 6500), w(5, 50, "gold", 0.3), w(12, 1, "moab_red", 0)],
     /* 56 */ [w(0, 100, "gold", 0.18)],
-    /* 57 */ [w(0, 6, "boss", 3.5, 2800)],
-    /* 58 */ [w(0, 110, "gold", 0.16)],
-    /* 59 */ [w(0, 3, "boss", 5, 8500), w(6, 60, "gold", 0.25)],
+    /* 57 */ [w(0, 6, "boss", 3.5, 2800), w(8, 2, "moab_blue", 4)],
+    /* 58 */ [w(0, 110, "gold", 0.16), w(10, 2, "moab_red", 6)],
+    /* 59 */ [w(0, 3, "boss", 5, 8500), w(6, 60, "gold", 0.25), w(8, 2, "moab_red", 6)],
     /* 60 */ [w(0, 1, "boss", 0, 21000), w(8, 30, "gold", 0.5)],
-    /* 61 */ [w(0, 120, "gold", 0.15)],
-    /* 62 */ [w(0, 8, "boss", 3, 3800)],
-    /* 63 */ [w(0, 130, "gold", 0.14), w(8, 40, "metal", 0.2)],
-    /* 64 */ [w(0, 4, "boss", 5, 10000), w(6, 60, "gold", 0.25)],
-    /* 65 */ [w(0, 150, "gold", 0.12)],
-    /* 66 */ [w(0, 8, "boss", 3.2, 4200)],
-    /* 67 */ [w(0, 1, "boss", 0, 30000), w(5, 100, "gold", 0.15)],
+    /* 61 */ [w(0, 120, "gold", 0.15), w(8, 3, "moab_red", 5)],
+    /* 62 — MEGA GREEN debut: the ZOMG of hedgehogs */
+              [w(0, 8, "boss", 3, 3800), w(12, 1, "moab_green", 0)],
+    /* 63 */ [w(0, 130, "gold", 0.14), w(8, 40, "metal", 0.2), w(8, 2, "moab_red", 5)],
+    /* 64 */ [w(0, 4, "boss", 5, 10000), w(6, 60, "gold", 0.25), w(10, 1, "moab_green", 0)],
+    /* 65 */ [w(0, 150, "gold", 0.12), w(8, 1, "moab_green", 0), w(14, 2, "moab_red", 5)],
+    /* 66 */ [w(0, 8, "boss", 3.2, 4200), w(10, 2, "moab_green", 8)],
+    /* 67 */ [w(0, 1, "boss", 0, 30000), w(5, 100, "gold", 0.15), w(12, 2, "moab_green", 8)],
     /* 68 — ROUND 67.67: THE GOLDEN BLUR. Survive 2/3 of a round to win. */
               [w(0, 1, "final", 0, 30000),
                w(6, 30, "gold", 0.7),
                w(15, 4, "boss", 3, 5000),
+               w(20, 1, "moab_green", 0),
                w(24, 60, "shadow", 0.25),
                w(30, 40, "gold", 0.25)],
   ];
@@ -117,6 +121,10 @@ const Rounds = (() => {
     if (r % 2 === 0) ws.push(w(8, 16 + k, "metal", 0.25));
     if (r % 3 === 0) ws.push(w(6, 2 + Math.floor(k / 7), "boss", 4, 4000 + k * 420));
     if (r % 10 === 0) ws.push(w(12, 1, "boss", 0, 16000 + k * 1100));
+    // the MOAB-class keeps showing up too
+    if (r % 2 === 1) ws.push(w(10, 1 + Math.floor(k / 12), "moab_blue", 5));
+    if (r % 4 === 0) ws.push(w(14, 1 + Math.floor(k / 16), "moab_red", 6));
+    if (r % 8 === 0) ws.push(w(18, 1 + Math.floor(k / 24), "moab_green", 8));
     if (r === FREEPLAY_MAX) {
       // the last stand: a Golden Blur rematch plus the kitchen sink
       ws.push(w(10, 1, "final", 0, 60000));

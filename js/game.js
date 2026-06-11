@@ -153,7 +153,7 @@
       surviveWrap.classList.add("active");
       toast("ROUND 67.67 — SURVIVE THE GOLDEN BLUR!");
       AudioSys.sfx("bossWarn");
-    } else if (waves.some(wv => wv.type === "boss")) {
+    } else if (waves.some(wv => Enemies.TYPES[wv.type].boss)) {
       toast(`ROUND ${game.round} — BOSS INCOMING!`);
       AudioSys.sfx("bossWarn");
     } else {
@@ -587,7 +587,7 @@
         const tier = t.tiers[p];
         const btn = document.createElement("button");
         btn.className = "up-buy";
-        if (tier >= 4) {
+        if (tier >= pd.ups.length) {
           btn.classList.add("maxed");
           btn.innerHTML = `<span class="ub-name">FULLY UPGRADED</span>`;
         } else {

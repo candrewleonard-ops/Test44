@@ -91,7 +91,7 @@ await page.evaluate(() => {
       const t = new PTD.Towers.Tower(types[i], spots[i][0], spots[i][1], 1);
       PTD.game.towers.push(t);
       // max out one path, two tiers in the other (validates the BTD5 rule)
-      for (let k = 0; k < 4; k++) if (t.canUpgrade(0, PTD.game.level).ok) t.buyUpgrade(0);
+      for (let k = 0; k < 5; k++) if (t.canUpgrade(0, PTD.game.level).ok) t.buyUpgrade(0);
       for (let k = 0; k < 2; k++) if (t.canUpgrade(1, PTD.game.level).ok) t.buyUpgrade(1);
     }
   }
@@ -116,10 +116,20 @@ let st = await page.evaluate(() => ({ round: PTD.game.round, lives: PTD.game.liv
 console.log("midgame:", st);
 if (st.phase === "over") errors.push("lost the game in early rounds — balance is way off");
 
-// open the upgrade panel on the first tower
-await page.evaluate(() => { PTD.game.selected = PTD.game.towers[0]; });
+// open the upgrade panel on a tier-4 clucko: tier 5 must be offered there
+await page.evaluate(() => {
+  PTD.game.selected = PTD.game.towers.find(t => t.def.id === "clucko" && t.tiers[0] === 4)
+    || PTD.game.towers[0];
+});
 await page.waitForTimeout(300);
 await page.screenshot({ path: path.join(shots, "05-upgrades.png") });
+const panelCheck = await page.evaluate(() => ({
+  isT4: PTD.game.selected.tiers[0] === 4,
+  text: document.getElementById("up-paths").textContent,
+}));
+if (panelCheck.isT4 && !panelCheck.text.includes("EGGSECUTIONER")) {
+  errors.push("tier 5 upgrade not shown in panel after tier 4");
+}
 
 // jump near the end: round 66, huge bank, strong level, serious defense
 await page.evaluate(() => {
@@ -132,14 +142,14 @@ await page.evaluate(() => {
     const r = PTD.Towers.TYPES[id].radius;
     if (!PTD.GameMap.canPlace(x, y, r, g.towers)) return false;
     const t = new PTD.Towers.Tower(id, x, y, 1);
-    for (let k = 0; k < 4; k++) if (t.canUpgrade(pathFirst, g.level).ok) t.buyUpgrade(pathFirst);
+    for (let k = 0; k < 5; k++) if (t.canUpgrade(pathFirst, g.level).ok) t.buyUpgrade(pathFirst);
     for (let k = 0; k < 2; k++) if (t.canUpgrade(1 - pathFirst, g.level).ok) t.buyUpgrade(1 - pathFirst);
     g.towers.push(t);
     return true;
   };
   // beef up the early towers
   for (const t of g.towers) {
-    for (let k = 0; k < 4; k++) if (t.canUpgrade(0, g.level).ok) t.buyUpgrade(0);
+    for (let k = 0; k < 5; k++) if (t.canUpgrade(0, g.level).ok) t.buyUpgrade(0);
     for (let k = 0; k < 2; k++) if (t.canUpgrade(1, g.level).ok) t.buyUpgrade(1);
   }
   // glue coverage along the whole route
