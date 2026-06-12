@@ -577,7 +577,7 @@
       btnTarget.style.display = (s.kind === "farm" || s.kind === "slave") ? "none" : "";
 
       upPaths.innerHTML = "";
-      for (let p = 0; p < 2; p++) {
+      for (let p = 0; p < t.def.paths.length; p++) {
         const pd = t.def.paths[p];
         const div = document.createElement("div");
         div.className = "upath";

@@ -102,6 +102,13 @@ const rule = await page.evaluate(() => {
 });
 console.log("path rule check (should be blocked):", rule);
 if (rule && rule.ok) errors.push("BTD5 one-path rule not enforced!");
+// 2-of-3 crosspath rule: a tower invested in two paths can't touch the third
+const rule2 = await page.evaluate(() => {
+  const t = PTD.game.towers.find(t => t.tiers[0] > 0 && t.tiers[1] > 0);
+  return t ? t.canUpgrade(2, PTD.game.level) : null;
+});
+console.log("third path check (should be blocked):", rule2);
+if (rule2 && rule2.ok) errors.push("2-of-3 paths rule not enforced!");
 
 // let it play a few rounds
 await page.waitForTimeout(9000);

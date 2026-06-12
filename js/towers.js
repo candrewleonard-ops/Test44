@@ -30,6 +30,12 @@ const Towers = (() => {
           { name: "Cluck of Doom",    cost: 1700, desc: "Huge blasts, +2 dmg.",          fx: s => { s.aoe = Math.max(s.aoe, 58); s.dmg += 2; } },
           { name: "NUCLEAR NUGGET",   cost: 12000, desc: "T5: +4 dmg, massive blasts that stun.", fx: s => { s.dmg += 4; s.aoe = Math.max(s.aoe, 95); s.stun = Math.max(s.stun, 0.4); } },
         ]},
+        { title: "COOP COMMAND", ups: [
+          { name: "Speedy Spurs",     cost: 120,  desc: "Pecks 15% faster.",             fx: s => s.cooldown *= 0.85 },
+          { name: "Keen Talons",      cost: 280,  desc: "+1 damage.",                    fx: s => s.dmg += 1 },
+          { name: "Free Range",       cost: 700,  desc: "+40 range, +1 pierce.",         fx: s => { s.range += 40; s.pierce += 1; } },
+          { name: "Alpha Rooster",    cost: 2200, desc: "+1 dmg, 30% faster.",           fx: s => { s.dmg += 1; s.cooldown *= 0.7; } },
+        ]},
       ],
     },
 
@@ -50,6 +56,12 @@ const Towers = (() => {
           { name: "Diamond Tips",     cost: 260,  desc: "Pops METAL. +1 pierce.",        fx: s => { s.metalPop = true; s.pierce += 1; } },
           { name: "Red Hot Bits",     cost: 600,  desc: "+1 damage per drill.",          fx: s => s.dmg += 1 },
           { name: "Seismic Slam",     cost: 2000, desc: "Quakes every 2.5s: 4 dmg + stun in range.", fx: s => s.quake = { interval: 2.5, dmg: 4, stun: 1 } },
+        ]},
+        { title: "TUNNEL VISION", ups: [
+          { name: "Grease Job",       cost: 130,  desc: "Fires 15% faster.",             fx: s => s.cooldown *= 0.85 },
+          { name: "Wide Treads",      cost: 280,  desc: "+25 range.",                    fx: s => s.range += 25 },
+          { name: "Carbide Drills",   cost: 650,  desc: "+1 pierce, faster drills.",     fx: s => { s.pierce += 1; s.projSpeed += 120; } },
+          { name: "Mole Patrol",      cost: 2300, desc: "+1 dmg, +1 pierce, 20% faster.", fx: s => { s.dmg += 1; s.pierce += 1; s.cooldown *= 0.8; } },
         ]},
       ],
     },
@@ -73,6 +85,12 @@ const Towers = (() => {
           { name: "Corrosive Crude",  cost: 550,  desc: "1 dmg per 0.5s. Melts METAL.",  fx: s => s.dot = { dmg: 1, interval: 0.5, duration: 4, metalPop: true } },
           { name: "Total Meltdown",   cost: 1700, desc: "2 dmg per 0.4s, +2 pierce.",    fx: s => { s.dot = { dmg: 2, interval: 0.4, duration: 4, metalPop: true }; s.pierce += 2; } },
         ]},
+        { title: "SLIPPERY BUSINESS", ups: [
+          { name: "Extra Nozzle",     cost: 150,  desc: "Squirts 15% faster.",           fx: s => s.cooldown *= 0.85 },
+          { name: "Pressure Pump",    cost: 300,  desc: "+25 range, faster globs.",      fx: s => { s.range += 25; s.projSpeed += 120; } },
+          { name: "Double Glob",      cost: 700,  desc: "Fires 2 globs.",                fx: s => { s.projCount = 2; s.spread = 0.22; } },
+          { name: "Oil Tycoon",       cost: 2000, desc: "Stickier (+5% slow), +1 pierce, 20% faster.", fx: s => { s.slow.factor = Math.max(0.2, s.slow.factor - 0.05); s.pierce += 1; s.cooldown *= 0.8; } },
+        ]},
       ],
     },
 
@@ -93,6 +111,12 @@ const Towers = (() => {
           { name: "Concussion",       cost: 450,  desc: "Blasts stun 0.4s.",             fx: s => s.stun = Math.max(s.stun, 0.4) },
           { name: "Cluster Eggs",     cost: 1000, desc: "Spawns 4 mini-bombs.",          fx: s => s.cluster = 4 },
           { name: "Gilded Crusher",   cost: 3200, desc: "+5 dmg vs GOLD & bosses. 14 frags.", fx: s => { s.goldBonus = (s.goldBonus || 0) + 5; s.frags = 14; } },
+        ]},
+        { title: "DEMOLITION CREW", ups: [
+          { name: "Light Shells",     cost: 200,  desc: "Lobs 15% faster.",              fx: s => s.cooldown *= 0.85 },
+          { name: "Long Lob",         cost: 350,  desc: "+30 range.",                    fx: s => s.range += 30 },
+          { name: "Twin Tubes",       cost: 900,  desc: "Lobs 2 bombs.",                 fx: s => s.projCount = 2 },
+          { name: "Big Red Button",   cost: 2800, desc: "+1 dmg, bigger blasts, 20% faster.", fx: s => { s.dmg += 1; s.aoe += 15; s.cooldown *= 0.8; } },
         ]},
       ],
     },
@@ -115,6 +139,12 @@ const Towers = (() => {
           { name: "Static Field",     cost: 1100, desc: "Hits arc to 2 nearby enemies.", fx: s => s.chain = 2 },
           { name: "DEATH RAY",        cost: 3600, desc: "+4 dmg, +60 range.",            fx: s => { s.dmg += 4; s.range += 60; } },
         ]},
+        { title: "SWARM PROTOCOL", ups: [
+          { name: "Aero Frame",       cost: 250,  desc: "Fires 12% faster.",             fx: s => s.cooldown *= 0.88 },
+          { name: "Compound Eyes",    cost: 450,  desc: "+30 range.",                    fx: s => s.range += 30 },
+          { name: "Stinger Mk II",    cost: 950,  desc: "+1 pierce, faster bolts.",      fx: s => { s.pierce += 1; s.projSpeed += 160; } },
+          { name: "Queen's Guard",    cost: 2600, desc: "+1 dmg, 20% faster.",           fx: s => { s.dmg += 1; s.cooldown *= 0.8; } },
+        ]},
       ],
     },
 
@@ -136,6 +166,12 @@ const Towers = (() => {
           { name: "Stun Shells",      cost: 1100, desc: "Shots stun 1s.",                fx: s => s.stun = Math.max(s.stun, 1) },
           { name: "Double Barrel",    cost: 2400, desc: "Fires a second shot.",          fx: s => s.doubleShot = true },
           { name: "GOLD STANDARD",    cost: 6000, desc: "x2 damage vs GOLD & bosses.",   fx: s => s.goldMult = 2 },
+        ]},
+        { title: "LOGISTICS", ups: [
+          { name: "Fast Crane",       cost: 500,  desc: "Reloads 12% faster.",           fx: s => s.cooldown *= 0.88 },
+          { name: "Heavy Yolks",      cost: 800,  desc: "+6 damage.",                    fx: s => s.dmg += 6 },
+          { name: "Shockwave Shells", cost: 1600, desc: "Bigger splash, 0.3s stun.",     fx: s => { s.aoe += 20; s.stun = Math.max(s.stun, 0.3); } },
+          { name: "Artillery Network",cost: 4500, desc: "+10 dmg, 25% faster.",          fx: s => { s.dmg += 10; s.cooldown *= 0.75; } },
         ]},
       ],
     },
@@ -160,6 +196,12 @@ const Towers = (() => {
           { name: "Auto-Chute",       cost: 1800, desc: "Uncollected pingases bank at round end.", fx: s => s.autoChute = true },
           { name: "Pingas Bank",      cost: 4000, desc: "+$38 value, +$300 interest per round.", fx: s => { s.farmValue += 38; s.roundBonus += 300; } },
         ]},
+        { title: "FARMHANDS", ups: [
+          { name: "Scarecrow",        cost: 250,  desc: "+1 pingas per round.",          fx: s => s.farmCount += 1 },
+          { name: "Irrigation",       cost: 450,  desc: "+2 pingases per round.",        fx: s => s.farmCount += 2 },
+          { name: "Harvest Drone",    cost: 1200, desc: "+3 pingases, each worth +$10.", fx: s => { s.farmCount += 3; s.farmValue += 10; } },
+          { name: "Co-op Co-op",      cost: 2600, desc: "+$25 value, +$150 interest per round.", fx: s => { s.farmValue += 25; s.roundBonus += 150; } },
+        ]},
       ],
     },
 
@@ -182,6 +224,12 @@ const Towers = (() => {
           { name: "Pingas Resale",    cost: 1200, desc: "+$150 every round.",            fx: s => s.roundBonus += 150 },
           { name: "Questionable Crypto", cost: 3000, desc: "+$400 every round. Trust me.", fx: s => s.roundBonus += 400 },
         ]},
+        { title: "OVERTIME", ups: [
+          { name: "Coffee",           cost: 150,  desc: "Collects 40% faster.",          fx: s => s.cooldown *= 0.6 },
+          { name: "Second Sack",      cost: 350,  desc: "+35 collect range.",            fx: s => s.range += 35 },
+          { name: "Forklift Certified", cost: 900, desc: "Collected pingases +20% value.", fx: s => s.valueMul += 0.2 },
+          { name: "Middle Management", cost: 2000, desc: "+15% value, +$250 per round.", fx: s => { s.valueMul += 0.15; s.roundBonus += 250; } },
+        ]},
       ],
     },
   };
@@ -198,7 +246,7 @@ const Towers = (() => {
       this.x = x; this.y = y;
       this.radius = this.def.radius;
       this.priceMul = priceMul;
-      this.tiers = [0, 0];                   // owned tiers per path
+      this.tiers = this.def.paths.map(() => 0);  // owned tiers per path
       this.spent = Math.round(this.def.cost * priceMul);
       this.targetMode = this.def.base.defaultTarget || "first";
       this.cd = 0;
@@ -222,7 +270,7 @@ const Towers = (() => {
         farmCount: b.farmCount || 0, farmValue: b.farmValue || 0,
         autoChute: false, valueMul: b.valueMul || 1, roundBonus: 0,
       };
-      for (let p = 0; p < 2; p++) {
+      for (let p = 0; p < this.def.paths.length; p++) {
         for (let t = 0; t < this.tiers[p]; t++) {
           this.def.paths[p].ups[t].fx(s);
         }
@@ -238,13 +286,15 @@ const Towers = (() => {
       return Math.round(ups[tier].cost * this.priceMul);
     }
 
-    // BTD5 rule + tier-4/5 level gates. Returns {ok, reason}
+    // BTD-style crosspathing: upgrades in at most 2 of the 3 paths,
+    // and only one path may go past tier 2. Tier 4/5 need player level.
     canUpgrade(path, playerLevel) {
       const ups = this.def.paths[path].ups;
       const tier = this.tiers[path];
       if (tier >= ups.length) return { ok: false, reason: "MAXED" };
-      // only one path may go past tier 2
-      if (tier + 1 > 2 && this.tiers[1 - path] > 2) return { ok: false, reason: "ONE PATH ONLY" };
+      const others = this.tiers.filter((_, i) => i !== path);
+      if (tier === 0 && others.filter(t => t > 0).length >= 2) return { ok: false, reason: "2 PATHS MAX" };
+      if (tier + 1 > 2 && others.some(t => t > 2)) return { ok: false, reason: "ONE PATH ONLY" };
       if (tier === 3 && playerLevel < this.def.t4Level) return { ok: false, reason: `NEEDS LVL ${this.def.t4Level}` };
       if (tier === 4 && playerLevel < (this.def.t5Level || 99)) return { ok: false, reason: `NEEDS LVL ${this.def.t5Level}` };
       return { ok: true };
@@ -302,7 +352,7 @@ const Towers = (() => {
           if (p.dead) continue;
           if (Math.hypot(p.x - this.x, p.y - this.y) <= s.range) {
             game.collectPickup(p, s.valueMul);
-            this.cd = 0.25;
+            this.cd = s.cooldown;
             this.flash = 0.1;
             break;
           }
@@ -390,12 +440,17 @@ const Towers = (() => {
       c.fill();
       const hop = this.flash > 0 ? -2 : 0;
       c.drawImage(cv, Math.round(this.x - cv.width / 2), Math.round(this.y - cv.height / 2 + hop));
-      // tier pips
-      const total = this.tiers[0] + this.tiers[1];
+      // tier pips, color-coded per path
+      const total = this.tiers.reduce((a, b) => a + b, 0);
       if (total > 0) {
-        for (let i = 0; i < total; i++) {
-          c.fillStyle = i < this.tiers[0] ? "#5fd44a" : "#4ab8e8";
-          c.fillRect(this.x - 12 + i * 4, this.y + cv.height / 2 + 2, 3, 3);
+        const colors = ["#5fd44a", "#4ab8e8", "#f08326"];
+        let off = 0;
+        for (let p = 0; p < this.tiers.length; p++) {
+          for (let i = 0; i < this.tiers[p]; i++) {
+            c.fillStyle = colors[p];
+            c.fillRect(this.x - 14 + off * 4, this.y + cv.height / 2 + 2, 3, 3);
+            off++;
+          }
         }
       }
       void selected;
