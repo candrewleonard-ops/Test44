@@ -10,6 +10,14 @@ const Towers = (() => {
   const SPEED_BUFF = 1.15;
 
   const TYPES = {
+    hero: {
+      id: "hero", name: "DR. PINGAS", art: "hero", isHero: true,
+      desc: "The man himself. One per game; levels up every round.",
+      cost: 750, radius: 22, unlockLevel: 1,
+      base: { kind: "bullet", dmg: 2, pierce: 2, cooldown: 0.8, range: 130, projSpeed: 520, projCount: 1, spread: 0.1, dmgType: "energy", projStyle: "orb", sfx: "laser" },
+      paths: [],
+    },
+
     clucko: {
       id: "clucko", name: "CLUCKO", art: "clucko",
       desc: "Robo-rooster. Pelts the path with eggs.",
@@ -234,7 +242,7 @@ const Towers = (() => {
     },
   };
 
-  const ORDER = ["clucko", "drillbert", "slick", "bomzo", "buzzbot", "yolker", "farm", "slave"];
+  const ORDER = ["hero", "clucko", "drillbert", "slick", "bomzo", "buzzbot", "yolker", "farm", "slave"];
   const TARGET_MODES = ["first", "last", "strong", "close"];
 
   let nextId = 1;
@@ -247,6 +255,8 @@ const Towers = (() => {
       this.radius = this.def.radius;
       this.priceMul = priceMul;
       this.tiers = this.def.paths.map(() => 0);  // owned tiers per path
+      this.heroLevel = 1;                        // heroes self-level instead
+      this.heroXp = 0;
       this.spent = Math.round(this.def.cost * priceMul);
       this.targetMode = this.def.base.defaultTarget || "first";
       this.cd = 0;
@@ -275,11 +285,39 @@ const Towers = (() => {
           this.def.paths[p].ups[t].fx(s);
         }
       }
+      // hero: stats come from his level, not upgrade paths
+      if (this.def.isHero) {
+        const L = this.heroLevel;
+        s.dmg = 2 + Math.floor(L * 0.8);
+        s.pierce = 2 + Math.floor(L / 4);
+        s.cooldown = 0.8 * Math.pow(0.97, L);
+        s.range = 130 + L * 3;
+        if (L >= 12) { s.aoe = 45; s.dmgType = "explosive"; }
+        else if (L >= 7) { s.aoe = 30; s.dmgType = "explosive"; }
+        s.auraMul = L >= 20 ? 0.85 : L >= 15 ? 0.88 : L >= 10 ? 0.92 : 1;
+      }
       s.cooldown /= SPEED_BUFF;
       this.stats = s;
     }
 
+    heroXpNeed() { return 60 + 30 * (this.heroLevel - 1); }
+
+    // returns levels gained
+    gainHeroXp(n) {
+      if (!this.def.isHero || this.heroLevel >= 20) return 0;
+      this.heroXp += n;
+      let ups = 0;
+      while (this.heroLevel < 20 && this.heroXp >= this.heroXpNeed()) {
+        this.heroXp -= this.heroXpNeed();
+        this.heroLevel++;
+        ups++;
+      }
+      if (ups) this.recompute();
+      return ups;
+    }
+
     upgradeCost(path) {
+      if (!this.def.paths.length) return null;
       const ups = this.def.paths[path].ups;
       const tier = this.tiers[path];
       if (tier >= ups.length) return null;
@@ -289,6 +327,7 @@ const Towers = (() => {
     // BTD-style crosspathing: upgrades in at most 2 of the 3 paths,
     // and only one path may go past tier 2. Tier 4/5 need player level.
     canUpgrade(path, playerLevel) {
+      if (!this.def.paths.length) return { ok: false, reason: "HERO" };
       const ups = this.def.paths[path].ups;
       const tier = this.tiers[path];
       if (tier >= ups.length) return { ok: false, reason: "MAXED" };
@@ -386,7 +425,7 @@ const Towers = (() => {
       if (this.cd > 0) return;
       const target = this.pickTarget(game.enemies);
       if (!target) return;
-      this.cd = s.cooldown;
+      this.cd = s.cooldown * heroAura(game, this);
       this.flash = 0.08;
       this.aimX = target.x; this.aimY = target.y;
       AudioSys.sfx(s.sfx);
@@ -440,6 +479,23 @@ const Towers = (() => {
       c.fill();
       const hop = this.flash > 0 ? -2 : 0;
       c.drawImage(cv, Math.round(this.x - cv.width / 2), Math.round(this.y - cv.height / 2 + hop));
+      // hero level badge
+      if (this.def.isHero) {
+        const y = this.y - cv.height / 2 - 8;
+        c.fillStyle = "rgba(24,20,37,.85)";
+        c.beginPath(); c.roundRect(this.x - 15, y - 8, 30, 13, 5); c.fill();
+        c.strokeStyle = "#ffd23e"; c.lineWidth = 1.5; c.stroke();
+        c.fillStyle = "#ffd23e";
+        c.font = "bold 9px Trebuchet MS, Verdana, sans-serif";
+        c.textAlign = "center";
+        c.fillText("LV " + this.heroLevel, this.x, y + 2);
+        c.textAlign = "left";
+        if (this.stats.auraMul < 1) {
+          c.strokeStyle = "rgba(255,210,62,.25)";
+          c.lineWidth = 2;
+          c.beginPath(); c.arc(this.x, this.y, this.stats.range, 0, Math.PI * 2); c.stroke();
+        }
+      }
       // tier pips, color-coded per path
       const total = this.tiers.reduce((a, b) => a + b, 0);
       if (total > 0) {
@@ -455,6 +511,16 @@ const Towers = (() => {
       }
       void selected;
     }
+  }
+
+  // Dr. Pingas inspires nearby badniks to fire faster (level 10+)
+  function heroAura(game, tower) {
+    for (const t of game.towers) {
+      if (t.def.isHero && t !== tower && t.stats.auraMul && t.stats.auraMul < 1) {
+        if (Math.hypot(t.x - tower.x, t.y - tower.y) <= t.stats.range) return t.stats.auraMul;
+      }
+    }
+    return 1;
   }
 
   /* ---------------- projectiles ---------------- */
@@ -581,6 +647,15 @@ const Towers = (() => {
           c.fillStyle = "#fff";
           c.fillRect(-4, -1, 8, 2);
           break;
+        case "orb": {
+          const g = c.createRadialGradient(0, 0, 1, 0, 0, 7);
+          g.addColorStop(0, "#fff");
+          g.addColorStop(0.4, "#ffd23e");
+          g.addColorStop(1, "rgba(242,84,84,0)");
+          c.fillStyle = g;
+          c.beginPath(); c.arc(0, 0, 7, 0, Math.PI * 2); c.fill();
+          break;
+        }
         default:
           c.fillStyle = "#fff"; c.fillRect(-2, -2, 4, 4);
       }

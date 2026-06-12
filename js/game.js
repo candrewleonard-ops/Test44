@@ -4,7 +4,7 @@
 (() => {
   const canvas = document.getElementById("game");
   const ctx = canvas.getContext("2d");
-  ctx.imageSmoothingEnabled = false;
+  ctx.imageSmoothingEnabled = true;
 
   /* ---------------- leveling ---------------- */
   // cumulative XP required to reach level L
@@ -18,7 +18,7 @@
   const T5_BY_LEVEL = {};
   for (const id of Towers.ORDER) {
     const d = Towers.TYPES[id];
-    T4_BY_LEVEL[d.t4Level] = d.name;
+    if (d.t4Level) T4_BY_LEVEL[d.t4Level] = d.name;
     if (d.t5Level) T5_BY_LEVEL[d.t5Level] = d.name;
   }
 
@@ -191,6 +191,14 @@
       }
     }
     game.pickups = [];
+    // the hero studies every battle
+    for (const t of game.towers) {
+      if (t.def.isHero && t.gainHeroXp(10 + 2 * game.round)) {
+        toast(`DR. PINGAS REACHED LEVEL ${t.heroLevel}!`);
+        AudioSys.sfx("levelup");
+        ui.panelDirty = true;
+      }
+    }
     game.gainXp(Rounds.roundXp(game.round));
     AudioSys.sfx("roundEnd");
     if (game.round >= game.totalRounds) { winGame(); return; }
@@ -374,11 +382,17 @@
       const k = fx.t / fx.max;
       switch (fx.type) {
         case "boom": {
-          ctx.strokeStyle = `rgba(255,140,40,${k})`;
-          ctx.lineWidth = 4;
-          ctx.beginPath(); ctx.arc(fx.x, fx.y, fx.r * (1 - k * 0.6), 0, Math.PI * 2); ctx.stroke();
-          ctx.fillStyle = `rgba(255,220,90,${k * 0.5})`;
-          ctx.beginPath(); ctx.arc(fx.x, fx.y, fx.r * 0.5 * (1 - k * 0.5), 0, Math.PI * 2); ctx.fill();
+          const r = fx.r * (1 - k * 0.55);
+          const g = ctx.createRadialGradient(fx.x, fx.y, r * 0.1, fx.x, fx.y, r);
+          g.addColorStop(0, `rgba(255,255,230,${k})`);
+          g.addColorStop(0.45, `rgba(255,200,70,${k * 0.85})`);
+          g.addColorStop(0.8, `rgba(242,100,40,${k * 0.5})`);
+          g.addColorStop(1, "rgba(120,40,20,0)");
+          ctx.fillStyle = g;
+          ctx.beginPath(); ctx.arc(fx.x, fx.y, r, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = `rgba(255,170,60,${k * 0.9})`;
+          ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.arc(fx.x, fx.y, fx.r * (1.1 - k * 0.5), 0, Math.PI * 2); ctx.stroke();
           break;
         }
         case "quake": {
@@ -537,10 +551,12 @@
         const def = Towers.TYPES[card.dataset.tower];
         const cost = Math.round(def.cost * game.diff.priceMul);
         const locked = game.level < def.unlockLevel;
-        card.classList.toggle("locked", locked);
-        card.classList.toggle("poor", !locked && cash < cost);
+        const heroOut = def.isHero && game.towers.some(t => t.def.isHero);
+        card.classList.toggle("locked", locked || heroOut);
+        card.classList.toggle("poor", !locked && !heroOut && cash < cost);
         card.classList.toggle("armed", game.armed === card.dataset.tower);
-        card.querySelector(".tc-cost").textContent = locked ? `LVL ${def.unlockLevel}` : `$${cost}`;
+        card.querySelector(".tc-cost").textContent =
+          heroOut ? "DEPLOYED" : locked ? `LVL ${def.unlockLevel}` : `$${cost}`;
       }
     },
 
@@ -552,9 +568,16 @@
       ic.imageSmoothingEnabled = false;
       ic.clearRect(0, 0, 48, 48);
       ic.drawImage(Sprites.get(t.def.art, { scale: 3 }), 0, 0);
-      upName.textContent = t.def.name;
+      upName.textContent = t.def.isHero ? `${t.def.name} — LV ${t.heroLevel}` : t.def.name;
       const s = t.stats;
-      if (s.kind === "farm") {
+      if (t.def.isHero) {
+        const rate = (1 / s.cooldown).toFixed(1);
+        upStats.textContent =
+          `dmg ${s.dmg} | pierce ${s.pierce} | ${rate}/s | range ${Math.round(s.range)}` +
+          (s.aoe ? ` | blast ${s.aoe}` : "") +
+          `\n${t.heroLevel >= 20 ? "MAX LEVEL" : `xp ${t.heroXp}/${t.heroXpNeed()} — levels up each round`}` +
+          (s.auraMul < 1 ? `\nAURA: nearby badniks fire ${Math.round((1 - s.auraMul) * 100)}% faster` : "\naura unlocks at hero level 10");
+      } else if (s.kind === "farm") {
         upStats.textContent =
           `${s.farmCount} pingases/round x $${s.farmValue}` +
           (s.autoChute ? "\nbanks uncollected at round end" : "") +
@@ -656,6 +679,7 @@
   function armTower(id) {
     const def = Towers.TYPES[id];
     if (game.level < def.unlockLevel) { toast(`UNLOCKS AT LEVEL ${def.unlockLevel}`); return; }
+    if (def.isHero && game.towers.some(t => t.def.isHero)) { toast("DR. PINGAS IS ALREADY DEPLOYED"); return; }
     game.selected = null;
     ui.panelDirty = true;
     game.armed = game.armed === id ? null : id;
@@ -792,7 +816,7 @@
       btnSfx.click();
     } else if (k === "m" || k === "M") {
       btnMusic.click();
-    } else if (k >= "1" && k <= "8") {
+    } else if (k >= "1" && k <= "9") {
       const id = Towers.ORDER[+k - 1];
       if (id) armTower(id);
     }

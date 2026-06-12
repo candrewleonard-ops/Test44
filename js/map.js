@@ -159,37 +159,62 @@ const GameMap = (() => {
     const c = bg.getContext("2d");
     const T = THEME;
 
-    // ground with subtle checker
-    c.fillStyle = T.g1;
+    // ground: soft gradient base with big mottled patches (BTD6-style)
+    const gbg = c.createRadialGradient(W * 0.45, H * 0.4, 120, W * 0.5, H * 0.5, 720);
+    gbg.addColorStop(0, T.g1);
+    gbg.addColorStop(1, T.g2);
+    c.fillStyle = gbg;
     c.fillRect(0, 0, W, H);
-    c.fillStyle = T.g2;
-    for (let y = 0; y < H; y += 32) {
-      for (let x = (y / 32) % 2 ? 32 : 0; x < W; x += 64) {
-        c.fillRect(x, y, 32, 32);
-      }
-    }
-    // scattered speckles
-    c.fillStyle = T.spk;
     let seed = 7;
     const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    for (let i = 0; i < 320; i++) {
-      c.fillRect(Math.floor(rnd() * W), Math.floor(rnd() * H), 3, 3);
+    for (let i = 0; i < 26; i++) {
+      const x = rnd() * W, y = rnd() * H, r = 50 + rnd() * 110;
+      const gp = c.createRadialGradient(x, y, 0, x, y, r);
+      gp.addColorStop(0, T.g2 + "");
+      gp.addColorStop(1, "rgba(0,0,0,0)");
+      c.globalAlpha = 0.35;
+      c.fillStyle = gp;
+      c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill();
+      c.globalAlpha = 1;
     }
+    // fine speckles
+    c.fillStyle = T.spk;
+    c.globalAlpha = 0.5;
+    for (let i = 0; i < 280; i++) {
+      c.beginPath();
+      c.arc(rnd() * W, rnd() * H, 1 + rnd() * 1.6, 0, Math.PI * 2);
+      c.fill();
+    }
+    c.globalAlpha = 1;
 
-    // lake (ellipse blob)
-    c.fillStyle = T.water;
+    // lake: deep gradient with a bright shoreline
+    const gw = c.createRadialGradient(LAKE.cx - LAKE.rx * 0.25, LAKE.cy - LAKE.ry * 0.3, 20, LAKE.cx, LAKE.cy, Math.max(LAKE.rx, LAKE.ry));
+    gw.addColorStop(0, T.shim);
+    gw.addColorStop(0.5, T.water);
+    gw.addColorStop(1, T.waterEdge);
+    c.fillStyle = gw;
     c.strokeStyle = T.waterEdge;
     c.lineWidth = 5;
     c.beginPath();
     c.ellipse(LAKE.cx, LAKE.cy, LAKE.rx, LAKE.ry, 0, 0, Math.PI * 2);
     c.fill();
     c.stroke();
-    // water shimmer
-    c.fillStyle = T.shim;
-    for (let i = 0; i < 30; i++) {
+    c.strokeStyle = "rgba(255,255,255,.35)";
+    c.lineWidth = 2;
+    c.beginPath();
+    c.ellipse(LAKE.cx, LAKE.cy, LAKE.rx - 5, LAKE.ry - 5, 0, 0, Math.PI * 2);
+    c.stroke();
+    // ripples
+    c.strokeStyle = "rgba(255,255,255,.3)";
+    c.lineWidth = 2;
+    for (let i = 0; i < 22; i++) {
       const x = LAKE.cx - LAKE.rx + rnd() * LAKE.rx * 2;
       const y = LAKE.cy - LAKE.ry + rnd() * LAKE.ry * 2;
-      if (inLake(x, y)) c.fillRect(Math.floor(x), Math.floor(y), 10, 3);
+      if (inLake(x, y)) {
+        c.beginPath();
+        c.arc(x, y, 5 + rnd() * 7, Math.PI * 1.1, Math.PI * 1.9);
+        c.stroke();
+      }
     }
 
     // island
@@ -201,18 +226,38 @@ const GameMap = (() => {
     c.fill();
     c.stroke();
 
-    // road: dark border, light fill, classic dots
+    // road: drop shadow, dark border, dirt fill, worn center line
+    c.save();
+    c.globalAlpha = 0.25;
+    c.strokeStyle = "#1b1530";
+    c.translate(0, 4);
+    roundedPath(c, PATH_RADIUS + 2);
+    c.restore();
     c.strokeStyle = T.roadO;
-    roundedPath(c, PATH_RADIUS);
+    roundedPath(c, PATH_RADIUS + 1);
     c.strokeStyle = T.roadI;
-    roundedPath(c, PATH_RADIUS - 5);
+    roundedPath(c, PATH_RADIUS - 4);
+    // dirt mottling along the road
     c.fillStyle = T.dot;
-    for (let d = 26; d < TOTAL; d += 42) {
+    c.globalAlpha = 0.5;
+    for (let d = 14; d < TOTAL; d += 26) {
       const p = posAt(d);
       c.beginPath();
-      c.arc(p.x, p.y, 5, 0, Math.PI * 2);
+      c.arc(p.x + (rnd() - 0.5) * 22, p.y + (rnd() - 0.5) * 22, 2 + rnd() * 3.5, 0, Math.PI * 2);
       c.fill();
     }
+    c.globalAlpha = 1;
+    // dashed center line
+    c.save();
+    c.strokeStyle = "rgba(255,255,255,.4)";
+    c.lineWidth = 3;
+    c.setLineDash([14, 16]);
+    c.lineJoin = "round"; c.lineCap = "round";
+    c.beginPath();
+    c.moveTo(PATH[0].x, PATH[0].y);
+    for (let i = 1; i < PATH.length; i++) c.lineTo(PATH[i].x, PATH[i].y);
+    c.stroke();
+    c.restore();
 
     // bridge planks wherever the road crosses water
     c.fillStyle = "#9a6a30";
@@ -252,6 +297,13 @@ const GameMap = (() => {
     // GO! sign by the spawn road
     const sign = Sprites.get("sign", { scale: 3 });
     c.drawImage(sign, 14, PATH[0].y - PATH_RADIUS - sign.height - 6);
+
+    // soft vignette
+    const vg = c.createRadialGradient(W / 2, H / 2, H * 0.55, W / 2, H / 2, H * 1.05);
+    vg.addColorStop(0, "rgba(0,0,0,0)");
+    vg.addColorStop(1, "rgba(20,12,40,.28)");
+    c.fillStyle = vg;
+    c.fillRect(0, 0, W, H);
 
     return bg;
   }

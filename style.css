@@ -22,7 +22,7 @@ html, body {
     radial-gradient(circle at 25% 20%, #241e36 0%, transparent 55%),
     radial-gradient(circle at 80% 80%, #221a30 0%, transparent 55%);
   overflow: hidden;
-  font-family: "Courier New", Courier, monospace;
+  font-family: "Trebuchet MS", Verdana, "Segoe UI", sans-serif;
   color: var(--txt);
 }
 
@@ -51,7 +51,7 @@ html, body {
   font-weight: bold; font-size: 19px; letter-spacing: 1px;
 }
 .stat { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
-.ico canvas { display: block; image-rendering: pixelated; }
+.ico canvas { display: block; image-rendering: auto; }
 #lives-val { color: var(--red); }
 #cash-val { color: var(--gold); }
 #round-val { color: var(--txt); font-size: 17px; }
@@ -101,7 +101,7 @@ html, body {
 #midrow { flex: 1; display: flex; min-height: 0; }
 
 #canvas-holder { position: relative; flex: 0 0 1000px; background: #000; }
-#game { display: block; image-rendering: pixelated; cursor: crosshair; }
+#game { display: block; image-rendering: auto; cursor: crosshair; }
 
 /* ===== sidebar ===== */
 #sidebar {
@@ -127,7 +127,7 @@ html, body {
 }
 .tcard:hover { background: var(--ui-light); }
 .tcard:active { border-bottom-width: 2px; transform: translateY(2px); }
-.tcard canvas { image-rendering: pixelated; flex: 0 0 auto; }
+.tcard canvas { image-rendering: auto; flex: 0 0 auto; }
 .tcard .tc-info { flex: 1; min-width: 0; }
 .tcard .tc-name { font-weight: bold; font-size: 15px; letter-spacing: 1px; }
 .tcard .tc-desc { font-size: 11px; opacity: .75; line-height: 1.15; }
@@ -155,7 +155,7 @@ html, body {
   padding: 10px; border-bottom: 2px solid var(--ui-border);
   background: var(--ui-panel2);
 }
-#up-icon { image-rendering: pixelated; }
+#up-icon { image-rendering: auto; }
 #up-name { font-weight: bold; font-size: 17px; letter-spacing: 1px; color: var(--gold); }
 #up-stats { font-size: 11px; opacity: .85; line-height: 1.3; white-space: pre-line; }
 #up-close {
@@ -229,7 +229,7 @@ html, body {
 }
 .overlay.hidden { display: none; }
 .menu-card { text-align: center; padding: 20px; }
-#title-art { image-rendering: pixelated; margin-bottom: 4px; }
+#title-art { image-rendering: auto; margin-bottom: 4px; }
 .title {
   font-size: 44px; line-height: 1.05; letter-spacing: 4px;
   color: var(--gold);
