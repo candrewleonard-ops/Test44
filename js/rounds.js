@@ -7,9 +7,9 @@
 const Rounds = (() => {
 
   const DIFFS = {
-    easy:   { label: "EASY",   rounds: 30, lives: 200, cash: 1500, priceMul: 0.85, final: false },
-    medium: { label: "MEDIUM", rounds: 50, lives: 150, cash: 1500, priceMul: 1.0,  final: false },
-    hard:   { label: "HARD",   rounds: 68, lives: 100, cash: 1500, priceMul: 1.08, final: true },
+    easy:   { label: "EASY",   rounds: 30, lives: 200, cash: 3000, priceMul: 0.85, final: false },
+    medium: { label: "MEDIUM", rounds: 50, lives: 150, cash: 3000, priceMul: 1.0,  final: false },
+    hard:   { label: "HARD",   rounds: 68, lives: 100, cash: 3000, priceMul: 1.08, final: true },
   };
 
   // the survival stretch of round 67.67: two thirds of a nominal 60s round
