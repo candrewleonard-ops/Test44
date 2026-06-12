@@ -319,6 +319,8 @@ const GameMap = (() => {
     W, H, PATH_RADIUS, MAPS,
     get TOTAL() { return TOTAL; },
     get currentId() { return currentId; },
+    get LAKE() { return LAKE; },
+    get ISLAND() { return ISLAND; },
     load, posAt, distToPath, canPlace, inLake, background,
   };
 })();

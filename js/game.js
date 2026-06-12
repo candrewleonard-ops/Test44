@@ -172,6 +172,11 @@
         const hp = Math.round((wv.hp != null ? wv.hp : def.hp) * Rounds.hpScale(game.round, wv.type));
         game.enemies.push(new Enemies.Enemy(wv.type, 0, { hp }));
         wv.spawned++;
+        if (def.boss) {
+          const p = GameMap.posAt(40);
+          game.addEffect({ type: "shock", x: p.x, y: p.y, r: 120, t: 0.7, max: 0.7 });
+          game.shake = Math.max(game.shake, 0.3);
+        }
       }
       if (wv.spawned < wv.n) allDone = false;
     }
@@ -346,13 +351,70 @@
     if (game.shake > 0) game.shake -= dt;
   }
 
+  /* ---------------- ambience (pure eye candy) ---------------- */
+  const motes = [];
+  for (let i = 0; i < 26; i++) {
+    motes.push({
+      x: Math.random() * 1000, y: Math.random() * 640,
+      r: 1.2 + Math.random() * 2.4, a: 0.05 + Math.random() * 0.08,
+      vx: 4 + Math.random() * 8, vy: -(3 + Math.random() * 7),
+      ph: Math.random() * Math.PI * 2,
+    });
+  }
+
+  function drawAmbience(now) {
+    // animated water: a drifting specular sheen clipped to the lake
+    const L = GameMap.LAKE;
+    if (L) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(L.cx, L.cy, L.rx - 4, L.ry - 4, 0, 0, Math.PI * 2);
+      ctx.clip();
+      for (let b = 0; b < 2; b++) {
+        const ph = ((now / (5200 + b * 2600)) + b * 0.5) % 1;
+        const x = L.cx - L.rx + ph * L.rx * 2;
+        const g = ctx.createLinearGradient(x - 50, 0, x + 50, 0);
+        g.addColorStop(0, "rgba(255,255,255,0)");
+        g.addColorStop(0.5, "rgba(255,255,255,.10)");
+        g.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = g;
+        ctx.fillRect(x - 60, L.cy - L.ry, 120, L.ry * 2);
+      }
+      ctx.restore();
+    }
+    // floating dust motes
+    const dt = 1 / 60;
+    ctx.fillStyle = "#ffffff";
+    for (const m of motes) {
+      m.x += m.vx * dt; m.y += m.vy * dt;
+      m.ph += dt;
+      if (m.y < -8 || m.x > 1008) { m.x = Math.random() * 1000; m.y = 648; }
+      ctx.globalAlpha = m.a * (0.6 + 0.4 * Math.sin(m.ph * 2));
+      ctx.beginPath();
+      ctx.arc(m.x + Math.sin(m.ph) * 6, m.y, m.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    // slow holo scan sweep
+    const sp = (now / 9000) % 1.4;
+    const sx = -400 + sp * 1500;
+    const sg = ctx.createLinearGradient(sx, 0, sx + 220, 640);
+    sg.addColorStop(0, "rgba(140,220,255,0)");
+    sg.addColorStop(0.5, "rgba(140,220,255,.045)");
+    sg.addColorStop(1, "rgba(140,220,255,0)");
+    ctx.fillStyle = sg;
+    ctx.fillRect(0, 0, 1000, 640);
+  }
+
   /* ---------------- drawing ---------------- */
   function draw() {
+    const now = performance.now();
     ctx.save();
     if (game.shake > 0) {
       ctx.translate((Math.random() - 0.5) * 8 * game.shake, (Math.random() - 0.5) * 8 * game.shake);
     }
     ctx.drawImage(GameMap.background(), 0, 0);
+    drawAmbience(now);
 
     // goo splats under everything
     for (const fx of game.effects) {
@@ -433,9 +495,19 @@
           break;
         }
         case "cashpop": {
-          ctx.fillStyle = `rgba(255,210,62,${Math.min(1, k * 2)})`;
-          ctx.font = "bold 13px Courier New";
+          ctx.fillStyle = `rgba(255,215,94,${Math.min(1, k * 2)})`;
+          ctx.font = "bold 13px Trebuchet MS, Verdana, sans-serif";
           ctx.fillText("+$" + fx.v, fx.x - 12, fx.y - (1 - k) * 18);
+          break;
+        }
+        case "shock": {
+          const r = fx.r * (1.4 - k);
+          ctx.strokeStyle = `rgba(255,120,80,${k * 0.9})`;
+          ctx.lineWidth = 5 * k + 1;
+          ctx.beginPath(); ctx.arc(fx.x, fx.y, r, 0, Math.PI * 2); ctx.stroke();
+          ctx.strokeStyle = `rgba(255,255,255,${k * 0.5})`;
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(fx.x, fx.y, r * 0.7, 0, Math.PI * 2); ctx.stroke();
           break;
         }
       }
@@ -450,6 +522,16 @@
       ctx.globalAlpha = 0.75;
       ctx.drawImage(cv, Math.round(game.mouse.x - cv.width / 2), Math.round(game.mouse.y - cv.height / 2));
       ctx.globalAlpha = 1;
+    }
+
+    // critical lives: pulsing red edge warning
+    if (game.diff && game.lives > 0 && game.lives < game.diff.lives * 0.15) {
+      const a = 0.10 + 0.07 * Math.sin(now / 180);
+      const vg = ctx.createRadialGradient(500, 320, 240, 500, 320, 620);
+      vg.addColorStop(0, "rgba(255,40,60,0)");
+      vg.addColorStop(1, `rgba(255,40,60,${a})`);
+      ctx.fillStyle = vg;
+      ctx.fillRect(0, 0, 1000, 640);
     }
 
     ctx.restore();
@@ -471,17 +553,36 @@
     ctx.strokeRect(p.x - 8.5, p.y - 6.5, 17, 13);
   }
 
-  // BTD-style: neutral circle normally, red only when it can't go there
+  // holo targeting ring: cyan hologram normally, red only when blocked
   function drawRange(x, y, r, ok) {
     // map-wide towers (Yolker) would white out the screen; show a compact marker
     if (r > 900) { if (ok) return; r = 50; }
+    const now = performance.now();
+    const g = ctx.createRadialGradient(x, y, r * 0.35, x, y, r);
+    if (ok) {
+      g.addColorStop(0, "rgba(78,240,255,.03)");
+      g.addColorStop(1, "rgba(78,240,255,.16)");
+    } else {
+      g.addColorStop(0, "rgba(255,84,112,.08)");
+      g.addColorStop(1, "rgba(255,84,112,.3)");
+    }
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fillStyle = ok ? "rgba(255,255,255,.14)" : "rgba(232,69,69,.25)";
-    ctx.strokeStyle = ok ? "rgba(255,255,255,.6)" : "rgba(232,69,69,.85)";
-    ctx.lineWidth = 2;
+    ctx.fillStyle = g;
     ctx.fill();
+    ctx.strokeStyle = ok ? "rgba(140,240,255,.8)" : "rgba(255,84,112,.9)";
+    ctx.lineWidth = 1.8;
     ctx.stroke();
+    // rotating tick ring
+    ctx.save();
+    ctx.strokeStyle = ok ? "rgba(140,240,255,.5)" : "rgba(255,84,112,.6)";
+    ctx.lineWidth = 3;
+    ctx.setLineDash([10, 22]);
+    ctx.lineDashOffset = -(now / 40) % 32;
+    ctx.beginPath();
+    ctx.arc(x, y, r - 5, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
   }
 
   /* ---------------- DOM refs ---------------- */

@@ -135,6 +135,22 @@ const Enemies = (() => {
       const flip = this.dx < 0;
       const cv = Sprites.enemy(this.def.tier, { boss: this.isBoss, scale: this.def.scale, flip });
       const bob = Math.sin(this.dist * 0.11 + this.wobble) * 2;
+      // speed trail for the fast ones
+      const spd = this.currentSpeed();
+      if (spd > 100 && this.stunTimer <= 0) {
+        const back = GameMap.posAt(Math.max(0, this.dist - spd * 0.09));
+        const col = Sprites.ENEMY_PALS[this.def.tier].B;
+        const g = c.createLinearGradient(back.x, back.y, this.x, this.y);
+        g.addColorStop(0, "rgba(255,255,255,0)");
+        g.addColorStop(1, col + "");
+        c.save();
+        c.globalAlpha = Math.min(0.4, (spd - 100) / 260);
+        c.strokeStyle = g;
+        c.lineWidth = this.def.radius * 1.1;
+        c.lineCap = "round";
+        c.beginPath(); c.moveTo(back.x, back.y); c.lineTo(this.x, this.y); c.stroke();
+        c.restore();
+      }
       // shadow
       c.fillStyle = "rgba(40,25,5,.22)";
       c.beginPath();
@@ -165,14 +181,18 @@ const Enemies = (() => {
         c.ellipse(this.x, this.y + cv.height / 2 - 4, cv.width / 3, 3, 0, 0, Math.PI * 2);
         c.fill();
       }
-      // hp bar for tougher units
+      // hp bar for tougher units (rounded, gradient, 2031-approved)
       if ((this.maxHp >= 8 || this.isBoss) && this.hp < this.maxHp) {
-        const w = this.isBoss ? 52 : 26;
-        const x = this.x - w / 2, y = this.y - cv.height / 2 - 9;
-        c.fillStyle = "#181425";
-        c.fillRect(x - 1, y - 1, w + 2, 6);
-        c.fillStyle = this.isBoss ? "#ffd23e" : "#5fd44a";
-        c.fillRect(x, y, w * Math.max(0, this.hp / this.maxHp), 4);
+        const w = this.isBoss ? 54 : 26;
+        const x = this.x - w / 2, y = this.y - cv.height / 2 - 10;
+        const frac = Math.max(0, this.hp / this.maxHp);
+        c.fillStyle = "rgba(8,8,18,.8)";
+        c.beginPath(); c.roundRect(x - 1.5, y - 1.5, w + 3, 7, 4); c.fill();
+        const g = c.createLinearGradient(x, y, x, y + 4);
+        if (this.isBoss) { g.addColorStop(0, "#ffe89a"); g.addColorStop(1, "#e0a818"); }
+        else { g.addColorStop(0, "#8affc0"); g.addColorStop(1, "#2adf7c"); }
+        c.fillStyle = g;
+        c.beginPath(); c.roundRect(x, y, Math.max(1.5, w * frac), 4, 2.5); c.fill();
       }
     }
   }
